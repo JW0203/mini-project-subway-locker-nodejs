@@ -2,7 +2,7 @@ const sequelize = require('../config/database');
 const {DataTypes} = require('sequelize');
 
 
-const Locker = sequelize.define("lockers", {
+const Locker = sequelize.define('lockers', {
     stationName:{
         type: DataTypes.STRING, // 역 PK 값 저장 ? 아니면
         primaryKey : true

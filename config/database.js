@@ -12,10 +12,10 @@ const sequelize = new Sequelize('subway_locker','root','',{
 const checkConnection = async () =>{
     try{
         await sequelize.authenticate();
-        console.log("연결 성공!!")
+        console.log('연결 성공!!')
 
     }catch (error){
-        console.log("연결 실패...")
+        console.log('연결 실패...')
     }
 }
 

@@ -9,7 +9,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/lockers', lockerRouter);
 
 app.get('/', (req, res) => {
-    res.send( "<< 네이버 지도앱  or login 화면>>");
+    res.send( '<< 네이버 지도앱  or login 화면>>');
 })
 app.listen(port, () =>{
     console.log(`서버가 실행됩니다. http://localhost:${port}`);

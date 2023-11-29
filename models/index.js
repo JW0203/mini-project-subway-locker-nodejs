@@ -1,7 +1,8 @@
-const Locker = require("./Locker");
-
+const Locker = require('./Locker');
+const User = require('./User')
 
 
 module.exports ={
-    Locker
+    Locker,
+    User
 }

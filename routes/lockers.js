@@ -1,8 +1,8 @@
-const {Locker } = require("../models");
-const sequelize = require("../config/database");
-const express = require("express");
+const {Locker } = require('../models');
+const sequelize = require('../config/database');
+const express = require('express');
 const router = express.Router();
-const {Op} = require("sequelize");
+const {Op} = require('sequelize');
 
 /**
  * @swagger
@@ -43,7 +43,7 @@ const {Op} = require("sequelize");
  *                      description : Locker use expiration date
  */
 
-router.get("/:stationName", async (req, res)=>{
+router.get('/:stationName', async (req, res)=>{
     const stationName = req.params.stationName;
     console.log(stationName)
     // const lockers = await Locker.findAll({
@@ -52,7 +52,7 @@ router.get("/:stationName", async (req, res)=>{
     //     }
     // })
     // res.status(200).send(lokers);
-    res.status(200).send("역 보관함 검색");
+    res.status(200).send('역 보관함 검색');
 })
 
 module.exports = router;
