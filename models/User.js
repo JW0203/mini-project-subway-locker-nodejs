@@ -15,3 +15,5 @@ const User = new sequelize.define('users', {
         type: DataTypes.STRING
     }
 })
+
+module.exports = User;
