@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
  *
  *     responses:
  *       200:
- *         description: 조회 성공
+ *         description: 해당 역 위치 조회 및 맵에 표시 성공
  */
 
 router.post('/:station', async (req, res) =>{
