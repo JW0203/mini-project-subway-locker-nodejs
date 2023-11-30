@@ -10,7 +10,7 @@ const {Op} = require('sequelize');
  * @swagger
  * /map:
  *   post:
- *    summary: "보관소위치를 맵에 표시"
+ *    summary: 모든 보관소 위치를 맵에 표시
  *    description: "station 모델에서 모든 역의 위치를 검색하여서 전부 네이버 맵에 표시"
  *    responses:
  *       200:
