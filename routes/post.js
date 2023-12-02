@@ -145,10 +145,13 @@ router.patch('/:email', async (req, res) =>{
 	const userEmail = req.params.email;
 	res.status(200).send("fix the post");
 })
-module.exports = router;
 
 // 포스트 삭제
 router.delete('/:postId', async (req, res) => {
 	const postId = req.params.postId;
 	res.send(204).send()
 })
+
+
+module.exports = router;
+
