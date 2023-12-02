@@ -37,12 +37,17 @@ const router = express.Router();
  * @swagger
  * /posts:
  *   get:
- *     summary: 게시물 찾기
- *     description: 유저의 아이디인 이메일을 이용하여 게시물 찾기
- *     requestBody:
- *       description: 유저의 이메일 아이디를 요청
- *       required: true
- *       content:
+ *     summary: 모든 게시물 찾기
+ *     responses:
+ *       200:
+ *         description: 모든 게시물 찾기 성공
+ *         application.json:
+ *           schema:
+ *             properties:
+ *               title:
+ *                 type:string
+ *               content:
+ *                 type: string
  *
  *
  */
@@ -55,8 +60,11 @@ router.post('/', async (req, res) => {
 
 //게시물 검색
 router.get('/', async (req, res) =>{
-	res.status(200).send("found the post using users' email")
+
+	res.status(200).send("found all post")
 })
+
+//
 
 
 module.exports = router;
