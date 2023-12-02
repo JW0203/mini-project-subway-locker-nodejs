@@ -53,7 +53,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /post/{email}:
+ * /posts/{email}:
  *   get:
  *     summary: 한 유저가 게시한 포스트 검색
  *     parameters:
@@ -75,6 +75,36 @@ const router = express.Router();
  *                 type: string
  */
 
+/**
+ * @swagger
+ * /posts/{email}:
+ *   patch:
+ *     summary: 한 유저가 게시한 포스트 수정
+ *     parameters:
+ *       - in: path
+ *         name: user email
+ *         schema:
+ *             type: string
+ *         required: true
+ *         description: 이메일 포멧  example@email.com
+ *     requestBody:
+ *       description: '수정할 부분이 담긴 데이터'
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: 수정하고 싶은 타이틀
+ *               content:
+ *                 type: string
+ *                 description: 수정하고 싶은 내용
+ *
+ *     responses:
+ *       200:
+ *         description: 유저의 게시물 수정 성공
+ */
 // 게시물 게시
 router.post('/', async (req, res) => {
 	res.status(201).send('write a post')
@@ -92,5 +122,9 @@ router.get('/:email', async(req, res) =>{
 	res.status(200).send("found a user's post.")
 })
 
-
+// 유저가 게시한 포스트 수정
+router.patch('/:email', async (req, res) =>{
+	const userEmail = req.params.email;
+	res.status(200).send("fix the post");
+})
 module.exports = router;
