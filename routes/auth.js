@@ -139,22 +139,24 @@ router.post('/sign-in', async (req, res, next)=>{
     const {email, password} = req.body;
 
     try{
-        const isUserValid = User.findOne({
-            where:{email}
-        })
-        if (!isUserValid){
-            throw new HttpException(401, "이메일 이 존재 하지 않습니다.");
-            return
-        }
-        const isPasswordValid = await bcrypt.compare(password, isUserValid.password);
-        if (!isPasswordValid){
-            throw new HttpException(401, "비밀번호가 틀립니다.")
-        }
+        await sequelize.transaction(async () => {
+            const isUserValid = User.findOne({
+                where:{email}
+            })
+            if (!isUserValid){
+                throw new HttpException(401, "이메일 이 존재 하지 않습니다.");
+                return
+            }
+            const isPasswordValid = await bcrypt.compare(password, isUserValid.password);
+            if (!isPasswordValid){
+                throw new HttpException(401, "비밀번호가 틀립니다.")
+            }
 
-        const accessToken = jwt.sign({id: isUserValid.id}, process.env.JWT_SECRET_KEY,{
-            expiresIn: "1m"
-        });
-        res.status(200).send({accessToken});
+            const accessToken = jwt.sign({id: isUserValid.id}, process.env.JWT_SECRET_KEY,{
+                expiresIn: "1m"
+            });
+            res.status(200).send({accessToken});
+        })
     }catch(err){
         next(err);
     }
