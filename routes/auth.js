@@ -1,3 +1,4 @@
+require('dotenv').config()
 const {User }= require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
