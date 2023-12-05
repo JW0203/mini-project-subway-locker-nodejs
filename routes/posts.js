@@ -105,16 +105,15 @@ const sequelize = require('../config/database')
 
 /**
  * @swagger
- * /posts/{email}:
+ * /posts/{id}:
  *   patch:
- *     summary: 한 유저가 게시한 포스트 수정
+ *     summary: 포스트 수정
  *     parameters:
  *       - in: path
- *         name: user email
+ *         name: id
  *         schema:
- *             type: string
+ *             type: integer
  *         required: true
- *         description: 이메일 포멧  example@email.com
  *     requestBody:
  *       description: '수정할 부분이 담긴 데이터'
  *       required: true
@@ -209,10 +208,31 @@ router.get('/user-id/:email', async(req, res, next) =>{
 
 
 // 포스트 아이디로 게시물 수정
-router.patch('/:email', async (req, res) =>{
-	const userEmail = req.params.email;
+router.patch('/:id', async (req, res, next) =>{
+	const id = req.params.id;
+	const {title, content} = req.body
 
-	res.status(200).send("fix the post");
+	const validId = Message.findByPk(id)
+	try{
+		if (!validId){
+			throw new HttpException(401, "선택한 게시물이 없습니다.")
+		}
+		await sequelize.transaction(async()=> {
+			await Message.update(
+				{
+					title,
+					content
+				},
+				{
+					where : {id}
+				}
+			)
+		})
+		const revisedPost = await Message.findByPk(id);
+		res.status(200).send(revisedPost)
+	} catch (err) {
+		next();
+	}
 })
 
 // 포스트 삭제
