@@ -139,10 +139,11 @@ router.post('/', async (req, res, next) => {
 			throw new HttpException(401, "로그인을 해주세요.");
 			return;
 		}
-
+		const userPk = userLogInCheck.id;
 		const newMessage = await Message.create({
 			title,
-			content
+			content,
+			userPk
 		})
 		res.status(201).send(newMessage);
 	}catch(err){
