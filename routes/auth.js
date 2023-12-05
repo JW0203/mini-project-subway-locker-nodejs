@@ -76,7 +76,7 @@ const jwt = require('jsonwebtoken');
 
 const emptySpacePattern = /^\s&/;
 const notSpecialCharacterPattern = /^[0~9, a-z, A-Z, _, -]$/;
-const startEnglishNumberPattern = /^[0~9,a-z,A-Z];
+const startEnglishNumberPattern = /^[0~9,a-z,A-Z]&/;
 const emailEndPattern = /^([0-9a-zA-Z_-]+)(\.[0-9a-zA-Z_-]+){1,5}$/;
 
 router.post('/sign-up', async (req, res, next)=>{
