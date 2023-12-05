@@ -129,9 +129,6 @@ router.post('/sign-up', async (req, res, next)=>{
     }catch(err){
         next(err);
     }
-
-    res.status(201).send("signed up");
-
 })
 
 
