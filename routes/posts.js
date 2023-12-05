@@ -83,7 +83,7 @@ const sequelize = require('../config/database')
  * @swagger
  * /posts/{id}:
  *   get:
- *     summary: 한 유저가 게시한 포스트 검색
+ *     summary: 게시한 포스트 아이디로 검색
  *     parameters:
  *       - in: path
  *         name: user email
@@ -205,6 +205,24 @@ router.get('/user-id/:email', async(req, res, next) =>{
 	}
 	res.status(200).send("found a user's post.")
 })
+
+// 포스트 아이디로 게시물 검색
+router.get('/:id', async(req, res, next) => {
+	const id = req.params.id;
+	try{
+		await sequelize.transaction(async()=>{
+			const foundMessage = await Message.findByPk(id);
+			if(!foundMessage){
+				throw new HttpException(401, "해당하는 게시물이 없습니다.")
+				return;
+			}
+			res.status(200).send(foundMessage);
+		})
+	}catch(err){
+		next();
+	}
+})
+
 
 
 // 포스트 아이디로 게시물 수정
