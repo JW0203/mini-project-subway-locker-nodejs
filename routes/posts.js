@@ -14,6 +14,9 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             properties:
+ *               email:
+ *                 type: string
+ *                 description: 유저 로그인 여부 확인용
  *               title:
  *                 type: string
  *               content:
@@ -125,6 +128,8 @@ const router = express.Router();
 
 // 게시물 게시
 router.post('/', async (req, res) => {
+	const {email, title, content} = req.body;
+
 	res.status(201).send('write a post')
 })
 
