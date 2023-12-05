@@ -162,11 +162,11 @@ router.post('/', async (req, res, next) => {
 			throw new HttpException(401, "로그인을 해주세요.");
 			return;
 		}
-		const userPk = user.id;
+		const userId = user.id;
 		const newMessage = await Message.create({
 			title,
 			content,
-			userPk
+			userId
 		})
 		res.status(201).send(newMessage);
 	}catch(err){
@@ -186,7 +186,7 @@ router.get('/', async (req, res) =>{
 
 // 유저 아이디로 게시물 검색
 router.get('/user-id/:email', async(req, res, next) =>{
-	const userEmail = req.params.email;
+	const email = req.params.email;
 	try{
 		const user = await User.findOne({
 			where:{email}
@@ -236,14 +236,15 @@ router.patch('/:id', async (req, res, next) =>{
 })
 
 // 포스트 삭제
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
 	const id = req.params.id;
 	try{
 		await Message.destroy({where:id})
 		await Comment.destroy({where:{postId: id}})
 		res.status(204).send()
+	}catch(err){
+		next();
 	}
-	res.send(204).send()
 })
 
 
