@@ -1,4 +1,4 @@
-const {Message, User }= require('../models');
+const {Message, User, Comment }= require('../models');
 const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException')
@@ -236,8 +236,13 @@ router.patch('/:id', async (req, res, next) =>{
 })
 
 // 포스트 삭제
-router.delete('/:postId', async (req, res) => {
-	const postId = req.params.postId;
+router.delete('/:id', async (req, res) => {
+	const id = req.params.id;
+	try{
+		await Message.destroy({where:id})
+		await Comment.destroy({where:{postId: id}})
+		res.status(204).send()
+	}
 	res.send(204).send()
 })
 
