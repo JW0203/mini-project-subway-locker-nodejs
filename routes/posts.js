@@ -1,7 +1,8 @@
-const {Message }= require('../models');
+const {Message, User }= require('../models');
 const express = require('express');
 const router = express.Router();
-
+const HttpException = require('../middleware/HttpException')
+const sequelize = require('../config/database')
 /**
  * @swagger
  * /posts:
@@ -127,10 +128,26 @@ const router = express.Router();
  */
 
 // 게시물 게시
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
 	const {email, title, content} = req.body;
 
-	res.status(201).send('write a post')
+	try{
+		const userLogInCheck = await User.findOne({
+			where:{email}
+		})
+		if(userLogInCheck.logInStatus === false){
+			throw new HttpException(401, "로그인을 해주세요.");
+			return;
+		}
+
+		const newMessage = await Message.create({
+			title,
+			content
+		})
+		res.status(201).send(newMessage);
+	}catch(err){
+		next();
+	}
 })
 
 //게시물 검색
@@ -148,6 +165,7 @@ router.get('/:email', async(req, res) =>{
 // 유저가 게시한 포스트 수정
 router.patch('/:email', async (req, res) =>{
 	const userEmail = req.params.email;
+
 	res.status(200).send("fix the post");
 })
 
