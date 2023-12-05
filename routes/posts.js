@@ -151,10 +151,14 @@ router.post('/', async (req, res, next) => {
 	}
 })
 
-//게시물 검색
+//모든 게시물 검색
 router.get('/', async (req, res) =>{
+	const id = req.params.id;
+	const foundPosts = Message.findAll({
+		order:[['createdAt', 'DESC']]
+	});
 
-	res.status(200).send("found all post")
+	res.status(200).send(foundPosts);
 })
 
 // 유저 아이디로 게시물 검색
