@@ -57,7 +57,31 @@ const sequelize = require('../config/database')
 
 /**
  * @swagger
- * /posts/{email}:
+ * /posts/user-id/{email}:
+ *   get:
+ *     summary: 한 유저가 게시한 포스트 검색
+ *     parameters:
+ *       - in: path
+ *         name: user email
+ *         schema:
+ *             type: string
+ *         required: true
+ *         description: 이메일 포멧  example@email.com
+ *     responses:
+ *       200:
+ *         description: 유저의 게시물 찾기 성공
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ */
+
+/**
+ * @swagger
+ * /posts/{id}:
  *   get:
  *     summary: 한 유저가 게시한 포스트 검색
  *     parameters:
@@ -132,14 +156,14 @@ router.post('/', async (req, res, next) => {
 	const {email, title, content} = req.body;
 
 	try{
-		const userLogInCheck = await User.findOne({
+		const user = await User.findOne({
 			where:{email}
 		})
-		if(userLogInCheck.logInStatus === false){
+		if(user.logInStatus === false){
 			throw new HttpException(401, "로그인을 해주세요.");
 			return;
 		}
-		const userPk = userLogInCheck.id;
+		const userPk = user.id;
 		const newMessage = await Message.create({
 			title,
 			content,
@@ -162,12 +186,29 @@ router.get('/', async (req, res) =>{
 })
 
 // 유저 아이디로 게시물 검색
-router.get('/:email', async(req, res) =>{
+router.get('/user-id/:email', async(req, res, next) =>{
 	const userEmail = req.params.email;
+	try{
+		const user = await User.findOne({
+			where:{email}
+		})
+		if(!user){
+			throw new HttpException(401, "해당 이메일을 가진 유저가 없습니다.")
+		}
+		const userPk = user.id;
+		const foundPosts = await Message.findAll({
+			where:{userPk},
+			order:[['createdAt', 'DESC']]
+		});
+		res.status(200).send(foundPosts)
+	}catch(err){
+		next()
+	}
 	res.status(200).send("found a user's post.")
 })
 
-// 유저가 게시한 포스트 수정
+
+// 포스트 아이디로 게시물 수정
 router.patch('/:email', async (req, res) =>{
 	const userEmail = req.params.email;
 
