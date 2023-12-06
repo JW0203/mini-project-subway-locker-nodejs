@@ -25,12 +25,10 @@ const authenticateToken = require("../middleware/authenticateToken");
 router.get('/', authenticateToken, async (req,res, next) =>{
 	try {
 		const id = req.user.id;
-		// console.log(req.user)
 		const foundUser = await User.findOne({
 			where:{id},
 			attributes: ['id', 'email', 'createdAt' ]
 		})
-		// console.log(foundUser)
 		res.status(200).send(foundUser);
 	} catch (err) {
 		next(err);
