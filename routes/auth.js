@@ -125,8 +125,6 @@ router.post('/sign-up', async (req, res, next)=>{
             return;
         }
         await sequelize.transaction(async ()=>{
-
-
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash(password, saltRounds);
             await User.create({
@@ -141,7 +139,8 @@ router.post('/sign-up', async (req, res, next)=>{
             })
             res.status(201).send(newUserInfo);
         })
-    }catch(err){
+    })
+    } catch(err){
         next(err);
     }
 })
