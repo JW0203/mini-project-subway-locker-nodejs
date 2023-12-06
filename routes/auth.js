@@ -83,49 +83,58 @@ const emailEndPattern = /^([0-9a-zA-Z_-]+)(\.[0-9a-zA-Z_-]+){1,5}$/;
 router.post('/sign-up', async (req, res, next)=>{
     const {email, password} = req.body;
 
+    const emailBeforeAt = email.split('@')[0];
+    const emailAfterAt = email.split('@')[1];
+
+    const emailDuplication = User.findOne({
+        where:{email}
+    })
+    if(emailDuplication){
+        throw new HttpException(401, "입력한 이메일은 이미 사용 중입니다.");
+        return;
+    }
+    if (email.match(emptySpacePattern)){
+        throw new HttpException(401, "입력 한 이메일에 공백이 있습니다.");
+        return;
+    }
+
+    if (email.match(startEnglishNumberPattern)){
+        throw new HttpException(401, "입력 한 이메일 시작이 숫자나 영어가 아닙니다.")
+        return;
+    }
+    if (!emailBeforeAt.match(notSpecialCharacterPattern)){
+        throw new HttpException(401, "입력 한 이메일의 로컬부분(사용자명) 부분에 특수문자가 있습니다.");
+        return;
+    }
+    if (emailAfterAt.match(emailEndPattern)){
+        throw new HttpException(401, "입력 한 이메일의 도메인 부분을 다시 확인해주세요.");
+        return;
+    }
+
+    if (password.match(emptySpacePattern)){
+        throw new HttpException(401, "입력한 비밀번호에 공백이 있습니다.")
+        return;
+    }
+    if (password.length < 7 || password.length > 16){
+        throw new HttpException(401, "입렵한 비밀번호는 8자리이상 15이하여야 합니다.")
+        return;
+    }
     try{
         await sequelize.transaction(async ()=>{
-            const emailDuplication = User.findOne({
-                where:{email}
-            })
-            const emailBeforeAt = email.split('@')[0];
-            const emailAfterAt = email.split('@')[1];
-            if(emailDuplication){
-                throw new HttpException(401, "입력한 이메일은 이미 사용 중입니다.");
-                return;
-            }
-            if (email.match(emptySpacePattern)){
-                throw new HttpException(401, "입력 한 이메일에 공백이 있습니다.");
-                return;
-            }
-            if (email.match(startEnglishNumberPattern)){
-                throw new HttpException(401, "입력 한 이메일 시작이 숫자나 영어가 아닙니다.")
-                return;
-            }
-            if (!emailBeforeAt.match(notSpecialCharacterPattern)){
-                throw new HttpException(401, "입력 한 이메일의 로컬부분(사용자명) 부분에 특수문자가 있습니다.");
-                return;
-            }
-            if (emailAfterAt.match(emailEndPattern)){
-                throw new HttpException(401, "입력 한 이메일의 도메인 부분을 다시 확인해주세요.");
-                return;
-            }
 
-            if (password.match(emptySpacePattern)){
-                throw new HttpException(401, "입력한 비밀번호에 공백이 있습니다.")
-                return;
-            }
-            if (password.length < 7 || password.length > 16){
-                throw new HttpException(401, "입렵한 비밀번호는 8자리이상 15이하여야 합니다.")
-                return;
-            }
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash(password, saltRounds);
-            const newUser = await User.create({
+            await User.create({
                 email,
                 password : hashedPassword
             })
-            res.status(201).send(newUser);
+
+            const newUserInfo = await User.findOne(
+                {
+                    where:{ email
+                }, attributes:['id', 'email']
+            })
+            res.status(201).send(newUserInfo);
         })
     }catch(err){
         next(err);
@@ -135,7 +144,38 @@ router.post('/sign-up', async (req, res, next)=>{
 
 router.post('/sign-in', async (req, res, next)=>{
     const {email, password} = req.body;
+    const emailBeforeAt = email.split('@')[0];
+    const emailAfterAt = email.split('@')[1];
+    if(emailDuplication){
+        throw new HttpException(401, "입력한 이메일은 이미 사용 중입니다.");
+        return;
+    }
 
+    if (email.match(emptySpacePattern)){
+        throw new HttpException(401, "입력 한 이메일에 공백이 있습니다.");
+        return;
+    }
+    if (email.match(startEnglishNumberPattern)){
+        throw new HttpException(401, "입력 한 이메일 시작이 숫자나 영어가 아닙니다.")
+        return;
+    }
+    if (!emailBeforeAt.match(notSpecialCharacterPattern)){
+        throw new HttpException(401, "입력 한 이메일의 로컬부분(사용자명) 부분에 특수문자가 있습니다.");
+        return;
+    }
+    if (emailAfterAt.match(emailEndPattern)){
+        throw new HttpException(401, "입력 한 이메일의 도메인 부분을 다시 확인해주세요.");
+        return;
+    }
+
+    if (password.match(emptySpacePattern)){
+        throw new HttpException(401, "입력한 비밀번호에 공백이 있습니다.")
+        return;
+    }
+    if (password.length < 7 || password.length > 16){
+        throw new HttpException(401, "입렵한 비밀번호는 8자리이상 15이하여야 합니다.")
+        return;
+    }
     try{
         await sequelize.transaction(async () => {
             const user = User.findOne({
@@ -143,11 +183,12 @@ router.post('/sign-in', async (req, res, next)=>{
             })
             if (!user){
                 throw new HttpException(401, "이메일 이 존재 하지 않습니다.");
-                return
+                return;
             }
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid){
                 throw new HttpException(401, "비밀번호가 틀립니다.")
+                return;
             }
 
             const accessToken = jwt.sign({id: user.id}, process.env.JWT_SECRET_KEY,{
