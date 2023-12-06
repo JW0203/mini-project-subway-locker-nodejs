@@ -5,7 +5,6 @@ const postRouter = require('./posts');
 const commentRouter = require('./comments');
 
 
-
 module.exports = {
     lockerRouter,
     authRouter,

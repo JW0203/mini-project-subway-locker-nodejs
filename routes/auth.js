@@ -84,7 +84,7 @@ router.post('/sign-up', async (req, res, next)=>{
 
     try{
         await sequelize.transaction(async ()=>{
-            const emailDuplication = User.findOne({
+            const emailDuplication = await User.findOne({
                 where:{email}
             })
             const emailBeforeAt = email.split('@')[0];
