@@ -86,7 +86,6 @@ router.post('/sign-up', async (req, res, next)=>{
     const notSpecialCharacterPattern = /^[0-9,a-zA-Z_-]/;
     const startEnglishNumberPattern = /^[0-9,a-zA-Z]/;
     const emailEndPattern = /^([0-9a-zA-Z_-]+)(\.[0-9a-zA-Z_-]+){1,5}$/
-    console.log(emailBeforeAt)
     try{
         const emailDuplication = await User.findOne({
             where:{email}
@@ -146,11 +145,14 @@ router.post('/sign-up', async (req, res, next)=>{
 
 router.post('/sign-in', async (req, res, next)=>{
     const {email, password} = req.body;
+    console.log(email)
+    console.log(password)
     try{
         await sequelize.transaction(async () => {
-            const user = User.findOne({
-                where:{email}
-            })
+            const user = await User.findOne({
+                where:{email:email}
+            });
+            console.log(user.password) //undefined
             if (!user){
                 throw new HttpException(401, "이메일 이 존재 하지 않습니다.");
                 return;
