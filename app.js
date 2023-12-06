@@ -7,6 +7,9 @@ const {lockerRouter, authRouter,
     mapRouter, postRouter,
     commentRouter} = require('./routes');
 const HttpException = require('./middleware/HttpException');
+const sequelize = require('./config/database')
+
+sequelize.sync({force:true});
 
 app.use(express.json());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
