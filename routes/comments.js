@@ -1,4 +1,4 @@
-const {Comment, Post } = require('../models');
+const {Comment, Message} = require('../models');
 const express = require('express');
 const router  = express.Router();
 const sequelize = require('../config/database');
@@ -44,36 +44,44 @@ const HttpException = require('../middleware/HttpException');
  */
 
 
-router.post('/', async (req, res) =>{
-	const {postId, comment} = req.body;
-
-	await sequelize.transaction( async () =>{
-		const validPost = await Post.findByPk(postId)
-		if (!validPost){
-			return res.status(400).send('Invalid post id')
-		}
-		const newComment = await Comment.create({
-			comment,
-			postId
-		});
-		res.status(201).send(newComment);
-	})
+router.post('/', async (req, res, next) =>{
+	const {messageId, comment} = req.body;
+	try{
+		await sequelize.transaction( async () =>{
+			const validMessage = await Message.findByPk(messageId)
+			if (!validMessage){
+				return res.status(400).send('Invalid message id');
+			}
+			const newComment = await Comment.create({
+				comment,
+				messageId
+			});
+			res.status(201).send(newComment);
+		})
+	}catch(err){
+		next();
+	}
 })
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
 	const id = req.params.id;
 
 	try{
-		const postIdValidation = await Post.findByPk(id);
-		if(!postIdValidation){
-			throw new HttpException(400, "게시물 id가 유효하지 않습니다.");
+		const IdValidation = await Comment.findByPk(id);
+		if(!IdValidation){
+			throw new HttpException(400, "댓글 id가 유효하지 않습니다.");
+			// res.status(400).send("댓글 id가 유효하지 않습니다.");
 			return;
 		}
-		await Comment.destroy({where: id})
+		await Comment.destroy({where: {id:id}})
+		// await Comment.destroy({where: {id}})  <-- 이건 왜 에러가 나지???
+
 		res.status(204).send();
 	}catch(err){
-		res.status(500).send()
-		throw new HttpException(500, "처리하는 도중에 서버에 오류가 발생했습니다.")
+		console.log(err) // throw 는 받는데 next에서 에러가 나네
+		next();
+		// res.status(500).send()
+		// throw new HttpException(500, "처리하는 도중에 서버에 오류가 발생했습니다.")
 	}
 })
 module.exports = router;

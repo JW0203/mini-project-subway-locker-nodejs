@@ -10,13 +10,14 @@ Message.belongsTo(User, {foreignKey: 'userId'});
 
 // Message : comment = 1 : 1
 // Comment 에 message_id 라는 컬럼에 해당 Message 의 id 를 추가
-Message.hasOne(Comment, {foreignKey: 'messageId', sourceKey: 'id'});
+Message.hasMany(Comment, {foreignKey: 'messageId'});
 // Message 에 comment_id 라는 컬럼에 해당 Comment 의 id 를 추가
-Comment.hasOne(Message, {foreignKey: 'commentId', sourceKey: 'id'});
+Comment.belongsTo(Message, {foreignKey: 'messageId'});
 
 module.exports ={
     Locker,
     User,
     Station,
-    Message
+    Message,
+    Comment
 }
