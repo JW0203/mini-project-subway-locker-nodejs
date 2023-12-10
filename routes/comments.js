@@ -69,18 +69,17 @@ router.delete('/:id', async (req, res, next) => {
 	try{
 		const IdValidation = await Comment.findByPk(id);
 		if(!IdValidation){
-			throw new HttpException(400, "댓글 id가 유효하지 않습니다.");
-			// res.status(400).send("댓글 id가 유효하지 않습니다.");
+			// throw new HttpException(400, "댓글 id가 유효하지 않습니다.");
+			res.status(400).send("댓글 id가 유효하지 않습니다.");
 			return;
 		}
-		await Comment.destroy({where: {id:id}})
-		// await Comment.destroy({where: {id}})  <-- 이건 왜 에러가 나지???
+		await Comment.destroy({where: {id}})
 
 		res.status(204).send();
 	}catch(err){
-		console.log(err) // throw 는 받는데 next에서 에러가 나네
-		next();
-		// res.status(500).send()
+		// console.log(err) // throw 는 받는데 next() 가 app.js로 못 넘겨주고 있는 듯???
+		// next();
+		res.status(500).send("처리하는 도중에 서버에 오류가 발생했습니다.")
 		// throw new HttpException(500, "처리하는 도중에 서버에 오류가 발생했습니다.")
 	}
 })
