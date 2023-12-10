@@ -1,11 +1,14 @@
 const express = require('express');
 const app = express();
 const port = 3000;
+const sequelize = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swaggerDef');
 const HttpException = require('./middleware/HttpException');
 const {lockerRouter, authRouter, mapRouter} = require('./routes');
 
+//sequelize.sync({force:true});
+app.use(express.json());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/lockers', lockerRouter);
 app.use('/auth', authRouter);
@@ -17,9 +20,14 @@ app.get('/', (req, res) => {
 
 app.use((err, req, res, next) =>{
     if(err instanceof HttpException){
-        res.status(this.status).send(this.message);
+        res.status(err.status).send(err.message);
     }
-    res.status(500).send("internal error");
+    // res.status(500).send("internal error");
+    console.error(err);
+    res.status(500).send({
+        message: "Internal Error occurred while processing"
+    })
+    //res.status(500).send({error:err.message});
 })
 app.listen(port, () =>{
     console.log(`서버가 실행됩니다. http://localhost:${port}`);
