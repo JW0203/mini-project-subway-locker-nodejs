@@ -1,3 +1,4 @@
+require('dotenv').config()
 const {User }= require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
@@ -146,9 +147,35 @@ router.post('/sign-up', async (req, res, next)=>{
 })
 
 
-router.post('/sign-in', async (req, res)=>{
-    res.status(200).send("signed in");
+router.post('/sign-in', async (req, res,next)=>{
+    try{
+        const {email, password} = req.body;
 
+        await sequelize.transaction(async()=>{
+
+            const user = await User.findOne({
+                where:{email}
+            });
+
+            if(!user){
+                throw new HttpException(400, "입력하신 email은 없습니다.");
+                return;
+            }
+
+            const passwordValidation = await bcrypt.compare(password, user.password);
+            if(!passwordValidation){
+                throw new HttpException(401, "비밀번호가 틀렸습니다.");
+                return;
+            }
+
+            const accessToken = jwt.sign({id:user.id}, process.env.JWT_SECRET_KEY,{
+                expiresIn: "1m"
+            });
+            res.status(200).send({accessToken})
+        })
+    }catch (err){
+        next(err)
+    }
 })
 
 
