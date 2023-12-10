@@ -158,10 +158,10 @@ router.post('/', async (req, res, next) => {
 		const user = await User.findOne({
 			where:{email}
 		})
-		if(user.logInStatus === false){
-			throw new HttpException(401, "로그인을 해주세요.");
-			return;
-		}
+		// if(user.logInStatus === false){
+		// 	throw new HttpException(401, "로그인을 해주세요.");
+		// 	return;
+		// }
 		const userId = user.id;
 		const newMessage = await Message.create({
 			title,
@@ -187,6 +187,7 @@ router.get('/', async (req, res) =>{
 // 유저 아이디로 게시물 검색
 router.get('/user-id/:email', async(req, res, next) =>{
 	const email = req.params.email;
+
 	try{
 		const user = await User.findOne({
 			where:{email}
@@ -194,16 +195,18 @@ router.get('/user-id/:email', async(req, res, next) =>{
 		if(!user){
 			throw new HttpException(401, "해당 이메일을 가진 유저가 없습니다.")
 		}
-		const userPk = user.id;
+		const userId = user.id;
+		console.log(userId)
 		const foundPosts = await Message.findAll({
-			where:{userPk},
+			where:{userId},
 			order:[['createdAt', 'DESC']]
 		});
+
 		res.status(200).send(foundPosts)
 	}catch(err){
 		next()
 	}
-	res.status(200).send("found a user's post.")
+	// res.status(200).send("found a user's post.")
 })
 
 // 포스트 아이디로 게시물 검색
