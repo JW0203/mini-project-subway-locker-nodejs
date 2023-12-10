@@ -3,7 +3,7 @@ const cls = require('cls-hooked');
 const namespace = cls.createNamespace('jwt-encryption');
 Sequelize.useCLS(namespace)
 
-const sequelize = new Sequelize('subway_locker','root','',{
+const sequelize = new Sequelize('lockers_subway','root','',{
     host: '127.0.0.1',
     dialect: 'mysql',
     logQueryParameters : true
