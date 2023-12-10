@@ -193,7 +193,9 @@ router.get('/user-id/:email', async(req, res, next) =>{
 			where:{email}
 		})
 		if(!user){
-			throw new HttpException(401, "해당 이메일을 가진 유저가 없습니다.")
+			// throw new HttpException(400, "해당 이메일을 가진 유저가 없습니다.")
+			res.status(400).send( "해당 이메일을 가진 유저가 없습니다.")
+			return;
 		}
 		const userId = user.id;
 		console.log(userId)
@@ -216,7 +218,8 @@ router.get('/:id', async(req, res, next) => {
 		await sequelize.transaction(async()=>{
 			const foundMessage = await Message.findByPk(id);
 			if(!foundMessage){
-				throw new HttpException(401, "해당하는 게시물이 없습니다.")
+				// throw new HttpException(400, "해당하는 게시물이 없습니다.")
+				res.status(400).send("해당하는 게시물이 없습니다.")
 				return;
 			}
 			res.status(200).send(foundMessage);
@@ -232,13 +235,17 @@ router.get('/:id', async(req, res, next) => {
 router.patch('/:id', async (req, res, next) =>{
 	const id = req.params.id;
 	const {title, content} = req.body
-
-	const validId = Message.findByPk(id)
+	console.log(id);
 	try{
-		if (!validId){
-			throw new HttpException(401, "선택한 게시물이 없습니다.")
-		}
 		await sequelize.transaction(async()=> {
+
+			const validId = await Message.findByPk(id);
+			console.log(validId)
+			if (!validId){
+				console.log("not valid");
+				//throw new HttpException(400, "선택한 게시물이 없습니다."); - error 발생
+				return res.status(400).send("선택한 게시물이 없습니다."); //작동
+			}
 			await Message.update(
 				{
 					title,
@@ -248,7 +255,7 @@ router.patch('/:id', async (req, res, next) =>{
 					where : {id}
 				}
 			)
-		})
+		});
 		const revisedPost = await Message.findByPk(id);
 		res.status(200).send(revisedPost)
 	} catch (err) {
@@ -259,9 +266,22 @@ router.patch('/:id', async (req, res, next) =>{
 // 포스트 삭제
 router.delete('/:id', async (req, res, next) => {
 	const id = req.params.id;
+
 	try{
-		await Message.destroy({where:id})
-		await Comment.destroy({where:{postId: id}})
+		const findMessage = await Message.findByPk(id);
+		if(!findMessage){
+			res.status(400).send( "There are no message with given id")
+			// throw new HttpException(400, "There are no message")
+			// return;
+		}
+
+		await Message.destroy({where:{id}})
+		const findComments = await Comment.findAll({
+			where:{postId: id}
+		})
+		if(findComments){
+			await Comment.destroy({where:{postId:{id}}})
+		}
 		res.status(204).send()
 	}catch(err){
 		next();
