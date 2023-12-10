@@ -3,11 +3,14 @@ const app = express();
 const port = 3000;
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swaggerDef');
-const {lockerRouter, authRouter, mapRouter, postRouter, commentRouter} = require('./routes');
+const {lockerRouter, authRouter,
+    mapRouter, postRouter,
+    commentRouter, userRouter
+} = require('./routes');
 const HttpException = require('./middleware/HttpException');
 const sequelize = require('./config/database')
 
-sequelize.sync({force:true});
+// sequelize.sync({force:true});
 
 app.use(express.json());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -16,6 +19,7 @@ app.use('/auth', authRouter);
 app.use('/map', mapRouter);
 app.use('/posts', postRouter);
 app.use('/comments', commentRouter);
+app.use('/user', userRouter)
 
 app.get('/', (req, res) => {
     res.send( '<< 네이버 지도앱  or login 화면>>');

@@ -3,7 +3,7 @@ const authRouter = require('./auth');
 const mapRouter = require('./map');
 const postRouter = require('./posts');
 const commentRouter = require('./comments');
-
+const userRouter = require('./user');
 
 
 module.exports = {
@@ -11,5 +11,6 @@ module.exports = {
     authRouter,
     mapRouter,
     postRouter,
-    commentRouter
+    commentRouter,
+    userRouter
 }
