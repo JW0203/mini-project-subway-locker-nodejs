@@ -83,7 +83,7 @@ router.post('/sign-up', async (req, res, next)=>{
     const emailBeforeAt = email.split('@')[0];
     const emailAfterAt = email.split('@')[1];
     const emptySpacePattern = /[\s]/g;
-    const notSpecialCharacterPattern = /^[0-9,a-zA-Z_-]/;
+    const specialCharacterPattern = /[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>\#$%&\\\=\(\'\"]/g;
     const startEnglishNumberPattern = /^[0-9,a-zA-Z]/;
     const emailEndPattern = /^([0-9a-zA-Z_-]+)(\.[0-9a-zA-Z_-]+){1,5}$/
     try{
@@ -108,8 +108,8 @@ router.post('/sign-up', async (req, res, next)=>{
                 throw new HttpException(401, "입력 한 이메일 시작이 숫자나 영어가 아닙니다.")
                 return;
             }
-            if (!emailBeforeAt.match(notSpecialCharacterPattern)){
-                throw new HttpException(401, "입력 한 이메일의 로컬부분(사용자명) 부분에 특수문자가 있습니다.");
+            if (!email.match(specialCharacterPattern)){
+                throw new HttpException(401, "입력 한 이메일에 특수문자가 있습니다.");
                 return;
             }
             if (!emailAfterAt.match(emailEndPattern)){
