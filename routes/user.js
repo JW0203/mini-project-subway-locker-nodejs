@@ -26,7 +26,6 @@ const {User} = require('../models')
 router.get('/', authenticateToken, async (req, res, next) => {
 	try{
 		const id = req.user.id;
-		console.log(id)
 		const foundUser = await User.findOne({
 			where:{id},
 			attributes: ['id', 'email', 'createdAt' ]
