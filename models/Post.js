@@ -1,7 +1,7 @@
 const sequelize = require('../config/database');
 const {DataTypes} = require('sequelize');
 
-const Message = sequelize.define('messages', {
+const Post = sequelize.define('posts', {
 	id:{
 		type: DataTypes.INTEGER,
 		autoIncrement : true,
@@ -15,4 +15,4 @@ const Message = sequelize.define('messages', {
 	}
 })
 
-module.exports = Message;
+module.exports = Post;
