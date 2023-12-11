@@ -3,7 +3,6 @@ const {User }= require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
-const {Op} = require('sequelize');
 const HttpException = require('../middleware/HttpException');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
