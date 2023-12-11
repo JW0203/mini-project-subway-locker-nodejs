@@ -12,7 +12,10 @@ const Post = sequelize.define('posts', {
 	},
 	content:{
 		type:DataTypes.STRING
+	},
+	userId:{
+		type: DataTypes.INTEGER
 	}
-})
+}, {underscored:true})
 
 module.exports = Post;
