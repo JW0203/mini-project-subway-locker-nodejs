@@ -19,8 +19,12 @@ const {User} = require('../models')
  *                type: object
  *                properties:
  *                  id:
- *                    type: string
- *                    description: The user's name
+ *                    type: Integer
+ *                    description: The user's pk
+ *                  email:
+ *                    type: String
+ *                    description: user's sigin-in id
+ *
  */
 
 router.get('/', authenticateToken, async (req, res, next) => {
