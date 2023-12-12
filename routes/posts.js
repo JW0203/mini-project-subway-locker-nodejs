@@ -121,9 +121,9 @@ router.get('/', async (req, res, next) =>{
  *                 type: integer
  */
 router.get('/user-id/:email', async(req, res, next) =>{
-	const email = req.params.email;
 
 	try{
+		const email = req.params.email;
 		const user = await User.findOne({
 			where:{email}
 		})
@@ -170,8 +170,9 @@ router.get('/user-id/:email', async(req, res, next) =>{
  *                 type: integer
  */
 router.get('/:id', async(req, res, next) => {
-	const id = req.params.id;
+
 	try{
+		const id = req.params.id;
 		const foundPosts = await Post.findByPk(id);
 		if(!foundPosts){
 			throw new HttpException(400, "해당하는 게시물이 없습니다.")
@@ -182,4 +183,65 @@ router.get('/:id', async(req, res, next) => {
 		next(err);
 	}
 })
+
+/**
+ * @swagger
+ * /posts/{id}:
+ *   patch:
+ *     summary: 게시물 수정
+ *     description: 게시물의 아이디를 받고 해당 게시물을 수정
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     requestBody:
+ *       description: 수정 할 title 과 content
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             title:
+ *               type: string
+ *             content:
+ *               type: sting
+ *     responses:
+ *       200:
+ *         description: 수정 성공, 수정된 게시글 제공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               userId:
+ *                 type: integer
+ *
+ *
+ */
+
+router.patch('/:id', async(req, res, next) => {
+	try{
+		const id = req.params.id;
+		const {title, content} = req.body;
+
+		const postValidation = await Post.findByPk(id);
+		if(!postValidation){
+			throw new HttpException(400, "존재하지 않는 포스트 아이디 입니다.");
+			return;
+		}
+		await Post.update({
+			title, content
+		},
+			{where: {id}});
+		const revisedPost = await Post.findByPk(id);
+		res.status(200).send(revisedPost);
+	}catch(err){
+		next(err);
+	}
+})
+
+
 module.exports = router;
