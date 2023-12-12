@@ -97,7 +97,7 @@ router.get('/', async (req, res, next) =>{
 
 /**
  * @swagger
- * /user-id/{email}:
+ * /posts/user-id/{email}:
  *   get:
  *     summary: 유저 이메일로 유저가 게시한 게시물 찾기
  *     parameters:
@@ -145,4 +145,41 @@ router.get('/user-id/:email', async(req, res, next) =>{
 	}
 })
 
+/**
+ * @swagger
+ * /posts/{id}:
+ *   get:
+ *     summary: 게시물 아이디를 이용한 게시물 검색
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: 게시물 검색 성공
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               userId:
+ *                 type: integer
+ */
+router.get('/:id', async(req, res, next) => {
+	const id = req.params.id;
+	try{
+		const foundPosts = await Post.findByPk(id);
+		if(!foundPosts){
+			throw new HttpException(400, "해당하는 게시물이 없습니다.")
+			return;
+		}
+		res.status(200).send(foundPosts);
+	}catch(err){
+		next(err);
+	}
+})
 module.exports = router;
