@@ -66,5 +66,32 @@ router.post('/', async (req, res, next) => {
 	}
 })
 
+/**
+ * @swagger
+ * /posts:
+ *   get:
+ *     summary: 모든 게시물 찾기
+ *     responses:
+ *       200:
+ *         description: 모든 게시물 찾기 성공
+ *         application/json:
+ *           schema:
+ *             title:
+ *               type:string
+ *             content:
+ *               type: string
+ *             userId:
+ *               type: integer
+ */
 
+router.get('/', async (req, res, next) =>{
+	try{
+		const allPosts  = await Post.findAll({
+			order:[["createdAt", "DESC"]]
+		});
+		res.status(200).send(allPosts);
+	}catch(err){
+		next(err);
+	}
+})
 module.exports = router;
