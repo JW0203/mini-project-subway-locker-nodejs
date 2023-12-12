@@ -23,15 +23,14 @@ app.get('/', (req, res) => {
 })
 
 app.use((err, req, res, next) =>{
+    console.error(err);
     if(err instanceof HttpException){
         res.status(err.status).send(err.message);
         return;
     }
-    console.error(err);
     res.status(500).send({
         message: "Internal Error occurred while processing"
     })
-    //res.status(500).send({error:err.message});
 })
 app.listen(port, () =>{
     console.log(`서버가 실행됩니다. http://localhost:${port}`);
