@@ -1,7 +1,7 @@
 const sequelize = require('../config/database');
 const express = require('express')
 const router = express.Router();
-const {Post, User} = require('../models');
+const {Post, User, Comment} = require('../models');
 const HttpException = require('../middleware/HttpException');
 
 
@@ -243,5 +243,46 @@ router.patch('/:id', async(req, res, next) => {
 	}
 })
 
+/**
+ * @swagger
+ * /posts/{id}:
+ *   delete:
+ *   summary: 게시물 삭제
+ *   description: 게시물 삭제전에 댓글이 있으면 댓글도 삭제 후 게시물 삭제
+ *   parameters:
+ *     - in: path
+ *       name: id
+ *       schema:
+ *         type: integer
+ *       required: ture
+ *   responses:
+ *     204:
+ *       description: 삭제성공
+ *
+ */
+router.delete('/:id', async(req, res, next)=> {
+	try {
+		const id = req.params.id;
+		const post = await Post.findByPk(id);
 
+		if (!post) {
+			throw new HttpException(400, "주어진 id값을 가지는 게시물이 없습니다.");
+			return;
+		}
+
+		const comment = Comment.findAll({
+			where: {postId: id}
+		});
+
+		if (comment) {
+			await Comment.destroy(
+				{where: {postId: id} }
+			)
+		}
+		await Post.destroy({where:{id}});
+		res.status(204).send();
+	} catch (err){
+		next(err);
+	}
+})
 module.exports = router;
