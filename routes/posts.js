@@ -94,4 +94,55 @@ router.get('/', async (req, res, next) =>{
 		next(err);
 	}
 })
+
+/**
+ * @swagger
+ * /user-id/{email}:
+ *   get:
+ *     summary: 유저 이메일로 유저가 게시한 게시물 찾기
+ *     parameters:
+ *       - in: path
+ *         name: user email
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: 이 메일 포멧
+ *     responses:
+ *       200:
+ *         description: 유저가 게시한 게시물 찾기 성공
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               userId:
+ *                 type: integer
+ */
+router.get('/user-id/:email', async(req, res, next) =>{
+	const email = req.params.email;
+
+	try{
+		const user = await User.findOne({
+			where:{email}
+		})
+		if(!user){
+			// throw new HttpException(400, "해당 이메일을 가진 유저가 없습니다.")
+			res.status(400).send( "해당 이메일을 가진 유저가 없습니다.")
+			return;
+		}
+		const userId = user.id;
+		console.log(userId)
+		const foundPosts = await Post.findAll({
+			where:{userId},
+			order:[['createdAt', 'DESC']]
+		});
+
+		res.status(200).send(foundPosts)
+	}catch(err){
+		next(err)
+	}
+})
+
 module.exports = router;
