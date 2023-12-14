@@ -13,10 +13,6 @@ const Comment = sequelize.define('comments', {
 	createdAt:{
 		type: DataTypes.DATE
 	}
-	// postId:{
-	//     type: DataTypes.INTEGER
-	// }
-
 },{
 	underscored:true
 })
