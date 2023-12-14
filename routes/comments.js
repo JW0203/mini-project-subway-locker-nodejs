@@ -61,8 +61,40 @@ router.post('/', async(req, res, next) => {
 router.get('/', async(req, res, next)=>{
 	try{
 		const allComments = await Comment.findAll({
-			order:[['postId', 'DESC']]
+			order:[['postId', 'ASC']]
 		});
+		res.status(200).send(allComments)
+	}catch (err){
+		next(err);
+	}
+})
+
+/**
+ * @swagger
+ * /comments/{postId}:
+ *   get:
+ *     summary: 게시물 아이디로 해당하는 댓글 검색
+ *     parameters:
+ *       - in: path
+ *         name: 게시물 아이디
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: 게시물 아이디에 해당하는 댓글 찾기 성공
+ */
+router.get('/:postId', async(req, res, next)=>{
+	try{
+		const postId = req.params.postId;
+		const allComments = await Comment.findAll({
+			where:{postId},
+			order:[['postId', 'ASC']]
+		});
+		if(!allComments){
+			throw new HttpException(400, "해당하는 게시물 아이디가 없습니다.");
+			return;
+		}
 		res.status(200).send(allComments)
 	}catch (err){
 		next(err);
