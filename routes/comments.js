@@ -49,4 +49,24 @@ router.post('/', async(req, res, next) => {
 	}
 })
 
+/**
+ * @swagger
+ * /comments:
+ *   get:
+ *     summary: 게시된 모든 댓글 검색
+ *     responses:
+ *       200:
+ *         description: 댓글 검색 성공
+ */
+router.get('/', async(req, res, next)=>{
+	try{
+		const allComments = Comment.findAll({
+			order:[['postId', 'DESC']]
+		});
+		res.status(200).send(allComments)
+	}catch (err){
+		next(err);
+	}
+})
+
 module.exports = router;
