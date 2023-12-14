@@ -60,7 +60,7 @@ router.post('/', async(req, res, next) => {
  */
 router.get('/', async(req, res, next)=>{
 	try{
-		const allComments = Comment.findAll({
+		const allComments = await Comment.findAll({
 			order:[['postId', 'DESC']]
 		});
 		res.status(200).send(allComments)
