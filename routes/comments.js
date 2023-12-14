@@ -101,4 +101,34 @@ router.get('/:postId', async(req, res, next)=>{
 	}
 })
 
+/**
+ * @swagger
+ * /comments/{id}:
+ *   delete:
+ *     summary: 댓글 삭제
+ *     parameters:
+ *       - in: path
+ *         name: 댓글 아이디
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       204:
+ *         description:댓글 삭제 성공
+ */
+router.delete('/:id', async (req, res, next) =>{
+	try{
+		const id = req.params.id;
+		const validId = await Comment.findByPk(id);
+		if(!validId){
+			throw new HttpException(400, "존재하지 않는 댓글입니다.");
+			return;
+		}
+		await Comment.destroy({where: {id} });
+		res.status(204).send()
+	} catch(err){
+		next(err);
+	}
+})
+
 module.exports = router;
