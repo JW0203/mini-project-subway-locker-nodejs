@@ -63,7 +63,7 @@ const jwt = require('jsonwebtoken');
  *                 type: string
  *
  *     responses:
- *       200:
+ *       201:
  *         description: 받은 이메일 주소와 비밀번호 일치, 로그인 성공
  *         content:
  *           application/json:
