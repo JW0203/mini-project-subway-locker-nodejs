@@ -192,4 +192,50 @@ router.patch('/end', async (req, res, next) => {
     next(err);
   }
 });
+
+/**
+ * @swagger
+ * locker/reset:
+ *   patch:
+ *     summary: 결제가 확인되면 사물함 초기화
+ *     requestBody:
+ *       description: 결제여부, 라커 id
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               payment:
+ *                 type: boolean
+ *               id:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *        라커 초기화 성공
+ */
+
+router.patch('/reset', async (req, res, next) => {
+  try {
+    const { payment, id } = req.body;
+
+    if (payment === false) {
+      throw new HttpException(400, `사물함 ${id}의 사용료를 결제해주세요`);
+      return;
+    }
+
+    await Locker.update(
+      {
+        userInUse: null,
+        startDate: null,
+        endDate: null,
+      },
+      { where: { id } },
+    );
+    const resetLocker = await Locker.findByPk(id);
+    res.status(200).send(resetLocker);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
