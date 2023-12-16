@@ -114,4 +114,43 @@ router.get('/:name', async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /lockers/use:
+ *   patch:
+ *     summary: 역에 있는 라커 사용
+ *     requestBody:
+ *       description: 라커 id, 유저 id, 역 id,
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               name:
+ *                 type: string
+ *               n:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *        라커 대여 성공
+ *
+ */
+router.patch('/use', async (req, res, next) => {
+  const { id, userInUse } = req.body;
+  try {
+    const startDate = Date.now();
+    await Locker.update(
+      {
+        userInUse,
+        startDate,
+      },
+      { where: { id } },
+    );
+
+    const useLocker = await Locker.findByPk(id);
+    res.status(200).send(useLocker);
+  } catch (err) {
+    next(err);
+  }
+});
 module.exports = router;
