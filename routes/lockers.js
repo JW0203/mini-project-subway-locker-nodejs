@@ -1,4 +1,4 @@
-const { Locker, Station, User, Post } = require('../models');
+const { Locker, Station } = require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
@@ -6,7 +6,7 @@ const HttpException = require('../middleware/HttpException');
 
 /**
  * @swagger
- * /stations:
+ * /stations/make:
  *   post:
  *     summary: 역에 라커 추가하기
  *     requestBody:
@@ -25,7 +25,7 @@ const HttpException = require('../middleware/HttpException');
  *         description: 라커 추가 성공
  */
 
-router.post('/', async (req, res, next) => {
+router.post('/make', async (req, res, next) => {
   try {
     const { name, n } = req.body;
     console.log(name);
@@ -56,7 +56,7 @@ router.post('/', async (req, res, next) => {
  * /lockers/{stationName}:
  *   get:
  *     summary: 사물함 정보 조회
- *     description: 역에 있는 모든 유저 정보를 조회한다.
+ *     description: 해당 역에서 사용중인 모든 라커의 정보를 조회한다.
  *     parameters:
  *      - in: path
  *        name: station name
@@ -90,16 +90,51 @@ router.post('/', async (req, res, next) => {
  *                      description : Locker use expiration date
  */
 
-// router.get('/:stationName', async (req, res)=>{
-//     const stationName = req.params.stationName;
-//     console.log(stationName)
-//     // const lockers = await Locker.findAll({
-//     //     where:{
-//     //         stationName
-//     //     }
-//     // })
-//     // res.status(200).send(lokers);
-//     res.status(200).send('역 보관함 검색');
-// })
+router.get('/:name', async (req, res, next) => {
+  try {
+    const name = req.params.name;
+    console.log(name);
+    const station = await Station.findOne({
+      where: { name },
+    });
+    if (!station) {
+      throw new HttpException(400, `${name}은 없습니다.`);
+      return;
+    }
+    const stationId = station.id;
+    console.log(stationId);
+    const lockers = await Locker.findAll({
+      where: {
+        stationId,
+      },
+    });
+    res.status(200).send(lockers);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @swagger
+ * /lockers/use:
+ *   post:
+ *     summary: 역에 있는 라커 사용
+ *     requestBody:
+ *       description: 역 이름, 라커 id, 유저이름,
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               name:
+ *                 type: string
+ *               n:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *        라커 대여 성공
+ *
+ */
+router.post('/use', async (req, res, next) => {});
 
 module.exports = router;
