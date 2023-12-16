@@ -53,10 +53,21 @@ router.post('/make', async (req, res, next) => {
 
 /**
  * @swagger
+ * /lockers:
+ *   get:
+ *     summary: 모든 사물함 검색
+ *     description: 모든 역에 있는 사물함 검색
+ *     responses:
+ *       200:
+ *         조회 성공
+ */
+
+/**
+ * @swagger
  * /lockers/{stationName}:
  *   get:
  *     summary: 사물함 정보 조회
- *     description: 해당 역에서 사용중인 모든 라커의 정보를 조회한다.
+ *     description: 해당 역에 있는모든 라커의 정보를 조회한다.
  *     parameters:
  *      - in: path
  *        name: station name
@@ -68,27 +79,15 @@ router.post('/make', async (req, res, next) => {
  *     responses:
  *       200:
  *         description: 조회 성공
- *         content:
- *           application/json:
- *             schema:
- *                type: object
- *                properties:
- *                  stationName:
- *                      type: string
- *                      description: The station's name
- *                  lockerNumber:
- *                      type: integer
- *                      description : The number label of the locker
- *                  userInUse:
- *                      type: integer
- *                      description : The pk number of user
- *                  startDate:
- *                      type: date
- *                      description : Locker use start date
- *                  expirationDate:
- *                      type: date
- *                      description : Locker use expiration date
  */
+router.get('/', async (req, res, next) => {
+  try {
+    const allLockers = await Locker.findAll();
+    res.status(200).send(allLockers);
+  } catch (err) {
+    next();
+  }
+});
 
 router.get('/:name', async (req, res, next) => {
   try {
