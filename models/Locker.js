@@ -10,20 +10,20 @@ const Locker = sequelize.define(
   {
     id: {
       type: DataTypes.INTEGER,
-      authorization: true,
+      autoIncrement: true,
       primaryKey: true,
     },
-    // lockerNumber: {
-    //     type: DataTypes.INTEGER
-    // },
     userInUse: {
       type: DataTypes.INTEGER, // 유저 pk 값 저장
+      allowNull: true,
     },
     startDate: {
       type: DataTypes.DATE,
+      allowNull: true,
     },
     expirationDate: {
       type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   { underscored: true },
