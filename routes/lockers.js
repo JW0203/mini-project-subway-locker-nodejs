@@ -1,9 +1,8 @@
-const {Locker, Station, User, Post} = require('../models');
+const { Locker, Station, User, Post } = require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
-
 
 /**
  * @swagger
@@ -11,7 +10,7 @@ const HttpException = require('../middleware/HttpException');
  *   post:
  *     summary: 역에 라커 추가하기
  *     requestBody:
- *       description: 역 이름
+ *       description: 역 이름 과 라커 갯수
  *       required: true
  *       content:
  *         application/json:
@@ -19,61 +18,38 @@ const HttpException = require('../middleware/HttpException');
  *             properties:
  *               name:
  *                 type: string
+ *               n:
+ *                 type: integer
  *     responses:
  *       201:
  *         description: 라커 추가 성공
  */
 
 router.post('/', async (req, res, next) => {
-
-    console.log('---1111');
-    try{
-        const {name} = req.body;
-        console.log(name)
-        const station  = await Station.findOne({
-            where:{name}
-        })
-        if (!station){
-            throw new HttpException(400, "해당하는 역은 등록되어 있지 않습니다."); // 오류
-            return;
-        }
-
-        await sequelize.transaction(async () => {
-            const stationId = station.id;
-            const newLocker = await Post.create({
-                stationId
-            });
-            res.status(201).send(newLocker);
-        })
-    }catch(err){
-        next(err);
+  try {
+    const { name, n } = req.body;
+    console.log(name);
+    const station = await Station.findOne({
+      where: { name },
+    });
+    if (!station) {
+      throw new HttpException(400, '해당하는 역은 등록되어 있지 않습니다.'); // 오류
+      return;
     }
-})
-// router.post('/', async (req, res, next) => {
-//     const {name} = req.body;
-//     try{
-//         console.log(name);
-//         const stationNameValidation = await Station.findOne({
-//             where:{name}
-//         })
-//
-//         if(!stationNameValidation){
-//             throw new HttpException(400, "없는 역명입니다.");
-//             return;
-//         }
-//         const stationId = stationNameValidation.id;
-//         const newLocker = await Locker.create({
-//             userInUse: 'No',
-//             stationId
-//         })
-//         res.status(201).send(newLocker);
-//     }catch(err){
-//         next(err);
-//     }
-// })
 
-
-
+    await sequelize.transaction(async () => {
+      const stationId = station.id;
+      for (let i = 0; i < n; i++) {
+        const newLocker = await Locker.create({
+          stationId,
+        });
+      }
+      res.status(201).send(`${n}개의 라커가 ${name}에 생성되었습니다.`);
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
