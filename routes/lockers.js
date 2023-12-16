@@ -114,27 +114,4 @@ router.get('/:name', async (req, res, next) => {
   }
 });
 
-/**
- * @swagger
- * /lockers/use:
- *   post:
- *     summary: 역에 있는 라커 사용
- *     requestBody:
- *       description: 역 이름, 라커 id, 유저이름,
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             properties:
- *               name:
- *                 type: string
- *               n:
- *                 type: integer
- *     responses:
- *       201:
- *        라커 대여 성공
- *
- */
-router.post('/use', async (req, res, next) => {});
-
 module.exports = router;
