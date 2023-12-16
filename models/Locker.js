@@ -21,7 +21,7 @@ const Locker = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
-    expirationDate: {
+    endDate: {
       type: DataTypes.DATE,
       allowNull: true,
     },

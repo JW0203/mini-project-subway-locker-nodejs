@@ -61,6 +61,14 @@ router.post('/make', async (req, res, next) => {
  *       200:
  *         조회 성공
  */
+router.get('/', async (req, res, next) => {
+  try {
+    const allLockers = await Locker.findAll();
+    res.status(200).send(allLockers);
+  } catch (err) {
+    next();
+  }
+});
 
 /**
  * @swagger
@@ -80,19 +88,11 @@ router.post('/make', async (req, res, next) => {
  *       200:
  *         description: 조회 성공
  */
-router.get('/', async (req, res, next) => {
-  try {
-    const allLockers = await Locker.findAll();
-    res.status(200).send(allLockers);
-  } catch (err) {
-    next();
-  }
-});
 
 router.get('/:name', async (req, res, next) => {
   try {
     const name = req.params.name;
-    console.log(name);
+
     const station = await Station.findOne({
       where: { name },
     });
@@ -101,7 +101,7 @@ router.get('/:name', async (req, res, next) => {
       return;
     }
     const stationId = station.id;
-    console.log(stationId);
+
     const lockers = await Locker.findAll({
       where: {
         stationId,
@@ -130,7 +130,7 @@ router.get('/:name', async (req, res, next) => {
  *               n:
  *                 type: integer
  *     responses:
- *       201:
+ *       200:
  *        라커 대여 성공
  *
  */
@@ -148,6 +148,46 @@ router.patch('/use', async (req, res, next) => {
 
     const useLocker = await Locker.findByPk(id);
     res.status(200).send(useLocker);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @swagger
+ * /lockers/use:
+ *   patch:
+ *     summary: 역에 있는 라커 사용 종료
+ *     requestBody:
+ *       description: 라커 id
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               id:
+ *                 type: Integer
+ *     responses:
+ *       200:
+ *        라커 사용 종료 요청 성공
+ */
+router.patch('/end', async (req, res, next) => {
+  try {
+    const { id } = req.body;
+    const endDate = Date.now();
+    await Locker.update(
+      {
+        endDate,
+      },
+      { where: { id } },
+    );
+    const endLocker = await Locker.findByPk(id);
+    const dateStart = new Date(endLocker['startDate']);
+    const dateEnd = new Date(endDate);
+    const diffMSec = dateEnd.getTime() - dateStart.getTime();
+    const diffHour = Math.round(diffMSec / (60 * 1000));
+
+    res.status(200).send(`사용한 시간은 ${diffHour}분 입니다.`);
   } catch (err) {
     next(err);
   }
