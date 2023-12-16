@@ -1,10 +1,9 @@
-const naverMapAPI = ''
-const {Station } = require('../models');
+const naverMapAPI = '';
+const { Station } = require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
-const {Op} = require('sequelize');
-
+const { Op } = require('sequelize');
 
 /**
  * @swagger
@@ -18,8 +17,8 @@ const {Op} = require('sequelize');
  */
 
 router.post('/', async (req, res) => {
-	res.status(200).send('map')
-})
+  res.status(200).send('map');
+});
 
 /**
  * @swagger
@@ -40,8 +39,8 @@ router.post('/', async (req, res) => {
  *         description: 해당 역 위치 조회 및 맵에 표시 성공
  */
 
-router.post('/:station', async (req, res) =>{
-	res.status(200).send('a station map')
-})
+router.post('/:station', async (req, res) => {
+  res.status(200).send('a station map');
+});
 
 module.exports = router;

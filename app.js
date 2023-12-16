@@ -5,14 +5,15 @@ const sequelize = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swaggerDef');
 const HttpException = require('./middleware/HttpException');
-const {lockerRouter, authRouter,
-    mapRouter, userRouter,
+const {mapRouter, lockerRouter, authRouter,
+    userRouter,
     postsRouter, commentsRouter,
     stationsRouter
 } = require('./routes');
 
-sequelize.sync({force:true});
+//sequelize.sync({force:true});
 app.use(express.json());
+
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/lockers', lockerRouter);
 app.use('/auth', authRouter);
