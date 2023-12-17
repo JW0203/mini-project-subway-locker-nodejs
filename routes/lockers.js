@@ -240,6 +240,16 @@ router.patch('/reset', async (req, res, next) => {
   try {
     const { payment, id } = req.body;
 
+    const idValidation = await Locker.findByPk(id);
+    if (!idValidation) {
+      throw new HttpException(400, `락커 ${id}는 없습니다.`);
+      return;
+    }
+
+    if (!idValidation.userInUse) {
+      throw new HttpException(400, '비어 있는 락커 입니다.');
+      return;
+    }
     if (payment === false) {
       throw new HttpException(400, `사물함 ${id}의 사용료를 결제해주세요`);
       return;
