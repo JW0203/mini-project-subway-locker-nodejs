@@ -1,4 +1,4 @@
-const { Locker, Station } = require('../models');
+const { Locker, Station, User } = require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
@@ -28,7 +28,6 @@ const HttpException = require('../middleware/HttpException');
 router.post('/make', async (req, res, next) => {
   try {
     const { name, n } = req.body;
-    console.log(name);
     const station = await Station.findOne({
       where: { name },
     });
@@ -72,6 +71,60 @@ router.get('/', async (req, res, next) => {
 
 /**
  * @swagger
+ * /lockers/use:
+ *   patch:
+ *     summary: 역에 있는 라커 사용
+ *     requestBody:
+ *       description: 라커 id, 유저 id, 역 id,
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               name:
+ *                 type: string
+ *               n:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *        라커 대여 성공
+ *
+ */
+router.patch('/use', async (req, res, next) => {
+  const { id, userInUse } = req.body;
+  console.log(id);
+  console.log(userInUse);
+  try {
+    const idValidation = await Locker.findByPk(id);
+    if (!idValidation) {
+      throw new HttpException(400, `락커 ${id}는 없습니다. `);
+      return;
+    }
+
+    const userValidation = await User.findByPk(userInUse);
+    if (!userValidation) {
+      throw new HttpException(400, '존재하지 않는 유저입니다.');
+      return;
+    }
+
+    const startDate = Date.now();
+    await Locker.update(
+      {
+        userInUse,
+        startDate,
+      },
+      { where: { id } },
+    );
+
+    const useLocker = await Locker.findByPk(id);
+    res.status(200).send(useLocker);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @swagger
  * /lockers/{stationName}:
  *   get:
  *     summary: 사물함 정보 조회
@@ -92,7 +145,6 @@ router.get('/', async (req, res, next) => {
 router.get('/:name', async (req, res, next) => {
   try {
     const name = req.params.name;
-
     const station = await Station.findOne({
       where: { name },
     });
@@ -115,47 +167,7 @@ router.get('/:name', async (req, res, next) => {
 
 /**
  * @swagger
- * /lockers/use:
- *   patch:
- *     summary: 역에 있는 라커 사용
- *     requestBody:
- *       description: 라커 id, 유저 id, 역 id,
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             properties:
- *               name:
- *                 type: string
- *               n:
- *                 type: integer
- *     responses:
- *       200:
- *        라커 대여 성공
- *
- */
-router.patch('/use', async (req, res, next) => {
-  const { id, userInUse } = req.body;
-  try {
-    const startDate = Date.now();
-    await Locker.update(
-      {
-        userInUse,
-        startDate,
-      },
-      { where: { id } },
-    );
-
-    const useLocker = await Locker.findByPk(id);
-    res.status(200).send(useLocker);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * @swagger
- * /lockers/use:
+ * /lockers/end:
  *   patch:
  *     summary: 역에 있는 라커 사용 종료
  *     requestBody:
