@@ -186,6 +186,16 @@ router.get('/:name', async (req, res, next) => {
 router.patch('/end', async (req, res, next) => {
   try {
     const { id } = req.body;
+    const idValidation = await Locker.findByPk(id);
+    if (!idValidation) {
+      throw new HttpException(400, `락커 ${id}는 없습니다.`);
+      return;
+    }
+
+    if (!idValidation.userInUse) {
+      throw new HttpException(400, '비어 있는 락커 입니다.');
+      return;
+    }
     const endDate = Date.now();
     await Locker.update(
       {
