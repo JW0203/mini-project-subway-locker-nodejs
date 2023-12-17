@@ -9,6 +9,11 @@ const Comment = require('./Comment');
 Post.hasMany(Comment, {foreignKey:'postId'});
 Comment.belongsTo(Post,{foreignKey: 'postId'});
 
+// stations and lockers
+Station.hasMany(Locker, {foreignKey: 'stationId'});
+Locker.belongsTo(Station, {foreignKey: 'stationId'});
+
+
 module.exports ={
     Locker,
     User,
