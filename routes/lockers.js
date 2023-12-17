@@ -125,48 +125,6 @@ router.patch('/use', async (req, res, next) => {
 
 /**
  * @swagger
- * /lockers/{stationName}:
- *   get:
- *     summary: 사물함 정보 조회
- *     description: 해당 역에 있는모든 라커의 정보를 조회한다.
- *     parameters:
- *      - in: path
- *        name: station name
- *        required: true
- *        description :  the name of a station
- *        schema:
- *          type: string
- *
- *     responses:
- *       200:
- *         description: 조회 성공
- */
-
-router.get('/:name', async (req, res, next) => {
-  try {
-    const name = req.params.name;
-    const station = await Station.findOne({
-      where: { name },
-    });
-    if (!station) {
-      throw new HttpException(400, `${name}은 없습니다.`);
-      return;
-    }
-    const stationId = station.id;
-
-    const lockers = await Locker.findAll({
-      where: {
-        stationId,
-      },
-    });
-    res.status(200).send(lockers);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * @swagger
  * /lockers/end:
  *   patch:
  *     summary: 역에 있는 라커 사용 종료
