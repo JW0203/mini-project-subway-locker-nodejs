@@ -4,20 +4,22 @@ const Station = require('./Station');
 const Post = require('./Post');
 const Comment = require('./Comment');
 
-
 // posts and comment
-Post.hasMany(Comment, {foreignKey:'postId'});
-Comment.belongsTo(Post,{foreignKey: 'postId'});
+Post.hasMany(Comment, { foreignKey: 'postId' });
+Comment.belongsTo(Post, { foreignKey: 'postId' });
 
 // stations and lockers
-Station.hasMany(Locker, {foreignKey: 'stationId'});
-Locker.belongsTo(Station, {foreignKey: 'stationId'});
+Station.hasMany(Locker, { foreignKey: 'stationId' });
+Locker.belongsTo(Station, { foreignKey: 'stationId' });
 
+//user and locker
+User.hasMany(Locker, { foreignKey: 'userId' });
+Locker.belongsTo(User, { foreignKey: 'userId' });
 
-module.exports ={
-    Locker,
-    User,
-    Station,
-    Post,
-    Comment
-}
+module.exports = {
+  Locker,
+  User,
+  Station,
+  Post,
+  Comment,
+};
