@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const app = express();
 const port = 3000;
 const sequelize = require('./config/database');
@@ -17,6 +18,7 @@ const {
 
 //sequelize.sync({ force: true });
 app.use(express.json());
+app.use(cookieParser());
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/lockers', lockerRouter);
