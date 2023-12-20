@@ -13,10 +13,6 @@ const Locker = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    userInUse: {
-      type: DataTypes.INTEGER, // 유저 pk 값 저장
-      allowNull: true,
-    },
     startDate: {
       type: DataTypes.DATE,
       allowNull: true,
