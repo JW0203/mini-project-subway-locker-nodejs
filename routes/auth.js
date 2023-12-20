@@ -6,6 +6,7 @@ const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const authenticateToken = require('../middleware/authenticateToken');
 
 /**
  * @swagger
@@ -170,6 +171,15 @@ router.post('/sign-in', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+router.get('/sign-out', authenticateToken, async (req, res, next) => {
+  const id = req.user.id;
+  const user = await User.findByPk(id);
+  const userEmail = user.email;
+  console.log(user);
+
+  res.cookie('token', '').status(200).send(`${userEmail} 님 로그 아웃 되었습니다.`);
 });
 
 module.exports = router;
