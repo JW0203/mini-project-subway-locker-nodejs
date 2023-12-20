@@ -1,9 +1,9 @@
 const sequelize = require('../config/database');
-const express = require('express')
+const express = require('express');
 const router = express.Router();
-const {Post, User, Comment} = require('../models');
+const { Post, User, Comment } = require('../models');
 const HttpException = require('../middleware/HttpException');
-
+const authenticateToken = require('../middleware/authenticateToken');
 
 /**
  * @swagger
@@ -41,30 +41,31 @@ const HttpException = require('../middleware/HttpException');
  *                   type: Integer
  */
 
-router.post('/', async (req, res, next) => {
-	try{
-		const {email, title, content} = req.body;
-		const user  = await User.findOne({
-			where:{email}
-		})
-		if (!user){
-			throw new HttpException(400, "해당하는 이메일은 등록되어 있지 않습니다."); // 오류
-			return;
-		}
+router.post('/', authenticateToken, async (req, res, next) => {
+  try {
+    const { title, content } = req.body;
+    const id = req.user.id;
+    console.log(id);
+    const user = await User.findByPk(id);
 
-		await sequelize.transaction(async () => {
-			const userId = user.id;
-			const newPost = await Post.create({
-				title,
-				content,
-				userId
-			});
-			res.status(201).send(newPost);
-		})
-	}catch(err){
-		next(err);
-	}
-})
+    if (!user) {
+      throw new HttpException(400, '해당하는 이메일은 등록되어 있지 않습니다.'); // 오류
+      return;
+    }
+
+    await sequelize.transaction(async () => {
+      const userId = user.id;
+      const newPost = await Post.create({
+        title,
+        content,
+        userId,
+      });
+      res.status(201).send(newPost);
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
@@ -84,16 +85,16 @@ router.post('/', async (req, res, next) => {
  *               type: integer
  */
 
-router.get('/', async (req, res, next) =>{
-	try{
-		const allPosts  = await Post.findAll({
-			order:[["createdAt", "DESC"]]
-		});
-		res.status(200).send(allPosts);
-	}catch(err){
-		next(err);
-	}
-})
+router.get('/', async (req, res, next) => {
+  try {
+    const allPosts = await Post.findAll({
+      order: [['createdAt', 'DESC']],
+    });
+    res.status(200).send(allPosts);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
@@ -120,30 +121,29 @@ router.get('/', async (req, res, next) =>{
  *               userId:
  *                 type: integer
  */
-router.get('/user-id/:email', async(req, res, next) =>{
+router.get('/user-id/:email', async (req, res, next) => {
+  try {
+    const email = req.params.email;
+    const user = await User.findOne({
+      where: { email },
+    });
+    if (!user) {
+      // throw new HttpException(400, "해당 이메일을 가진 유저가 없습니다.")
+      res.status(400).send('해당 이메일을 가진 유저가 없습니다.');
+      return;
+    }
+    const userId = user.id;
+    console.log(userId);
+    const foundPosts = await Post.findAll({
+      where: { userId },
+      order: [['createdAt', 'DESC']],
+    });
 
-	try{
-		const email = req.params.email;
-		const user = await User.findOne({
-			where:{email}
-		})
-		if(!user){
-			// throw new HttpException(400, "해당 이메일을 가진 유저가 없습니다.")
-			res.status(400).send( "해당 이메일을 가진 유저가 없습니다.")
-			return;
-		}
-		const userId = user.id;
-		console.log(userId)
-		const foundPosts = await Post.findAll({
-			where:{userId},
-			order:[['createdAt', 'DESC']]
-		});
-
-		res.status(200).send(foundPosts)
-	}catch(err){
-		next(err)
-	}
-})
+    res.status(200).send(foundPosts);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
@@ -169,20 +169,19 @@ router.get('/user-id/:email', async(req, res, next) =>{
  *               userId:
  *                 type: integer
  */
-router.get('/:id', async(req, res, next) => {
-
-	try{
-		const id = req.params.id;
-		const foundPosts = await Post.findByPk(id);
-		if(!foundPosts){
-			throw new HttpException(400, "해당하는 게시물이 없습니다.")
-			return;
-		}
-		res.status(200).send(foundPosts);
-	}catch(err){
-		next(err);
-	}
-})
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const foundPosts = await Post.findByPk(id);
+    if (!foundPosts) {
+      throw new HttpException(400, '해당하는 게시물이 없습니다.');
+      return;
+    }
+    res.status(200).send(foundPosts);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
@@ -222,26 +221,29 @@ router.get('/:id', async(req, res, next) => {
  *
  */
 
-router.patch('/:id', async(req, res, next) => {
-	try{
-		const id = req.params.id;
-		const {title, content} = req.body;
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const { title, content } = req.body;
 
-		const postValidation = await Post.findByPk(id);
-		if(!postValidation){
-			throw new HttpException(400, "존재하지 않는 포스트 아이디 입니다.");
-			return;
-		}
-		await Post.update({
-			title, content
-		},
-			{where: {id}});
-		const revisedPost = await Post.findByPk(id);
-		res.status(200).send(revisedPost);
-	}catch(err){
-		next(err);
-	}
-})
+    const postValidation = await Post.findByPk(id);
+    if (!postValidation) {
+      throw new HttpException(400, '존재하지 않는 포스트 아이디 입니다.');
+      return;
+    }
+    await Post.update(
+      {
+        title,
+        content,
+      },
+      { where: { id } },
+    );
+    const revisedPost = await Post.findByPk(id);
+    res.status(200).send(revisedPost);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
@@ -260,29 +262,27 @@ router.patch('/:id', async(req, res, next) => {
  *       description: 삭제성공
  *
  */
-router.delete('/:id', async(req, res, next)=> {
-	try {
-		const id = req.params.id;
-		const post = await Post.findByPk(id);
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const post = await Post.findByPk(id);
 
-		if (!post) {
-			throw new HttpException(400, "주어진 id값을 가지는 게시물이 없습니다.");
-			return;
-		}
+    if (!post) {
+      throw new HttpException(400, '주어진 id값을 가지는 게시물이 없습니다.');
+      return;
+    }
 
-		const comment = Comment.findAll({
-			where: {postId: id}
-		});
+    const comment = Comment.findAll({
+      where: { postId: id },
+    });
 
-		if (comment) {
-			await Comment.destroy(
-				{where: {postId: id} }
-			)
-		}
-		await Post.destroy({where:{id}});
-		res.status(204).send();
-	} catch (err){
-		next(err);
-	}
-})
+    if (comment) {
+      await Comment.destroy({ where: { postId: id } });
+    }
+    await Post.destroy({ where: { id } });
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
 module.exports = router;
