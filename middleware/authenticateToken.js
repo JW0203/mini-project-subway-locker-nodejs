@@ -2,11 +2,13 @@ const jwt = require('jsonwebtoken');
 const HttpException = require('./HttpException');
 
 const authenticateToken = (req, res, next) => {
-  const autherHeader = req.headers.authorization;
-  const token = autherHeader && autherHeader.split(' ')[1];
+  // const autherHeader = req.headers.authorization;
+  // const token = autherHeader && autherHeader.split(' ')[1];
+  const token = req.cookies['token'];
+  console.log(token);
 
   if (!token) {
-    throw new HttpException(401, 'Header에 JWT 토큰을 입력해 주세요.');
+    throw new HttpException(400, 'Header에 JWT 토큰을 입력해 주세요.');
     return;
   }
 
