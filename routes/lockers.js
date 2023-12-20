@@ -3,6 +3,7 @@ const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
+const authenticateToken = require('../middleware/authenticateToken');
 
 /**
  * @swagger
@@ -90,10 +91,9 @@ router.get('/', async (req, res, next) => {
  *        라커 대여 성공
  *
  */
-router.patch('/use', async (req, res, next) => {
-  const { id, userInUse } = req.body;
-  console.log(id);
-  console.log(userInUse);
+router.patch('/use', authenticateToken, async (req, res, next) => {
+  const { id } = req.body;
+  const userId = req.user.id;
   try {
     const idValidation = await Locker.findByPk(id);
     if (!idValidation) {
@@ -101,7 +101,7 @@ router.patch('/use', async (req, res, next) => {
       return;
     }
 
-    const userValidation = await User.findByPk(userInUse);
+    const userValidation = await User.findByPk(userId);
     if (!userValidation) {
       throw new HttpException(400, '존재하지 않는 유저입니다.');
       return;
@@ -110,7 +110,7 @@ router.patch('/use', async (req, res, next) => {
     const startDate = Date.now();
     await Locker.update(
       {
-        userInUse,
+        userId,
         startDate,
       },
       { where: { id } },
@@ -150,7 +150,7 @@ router.patch('/end', async (req, res, next) => {
       return;
     }
 
-    if (!idValidation.userInUse) {
+    if (!idValidation.userId) {
       throw new HttpException(400, '비어 있는 락커 입니다.');
       return;
     }
@@ -204,7 +204,7 @@ router.patch('/reset', async (req, res, next) => {
       return;
     }
 
-    if (!idValidation.userInUse) {
+    if (!idValidation.userId) {
       throw new HttpException(400, '비어 있는 락커 입니다.');
       return;
     }
@@ -215,7 +215,7 @@ router.patch('/reset', async (req, res, next) => {
 
     await Locker.update(
       {
-        userInUse: null,
+        userId: null,
         startDate: null,
         endDate: null,
       },
