@@ -76,6 +76,36 @@ router.get('/', async (req, res, next) => {
 
 /**
  * @swagger
+ * /stations/{id}:
+ *   get:
+ *     summary: 역 아이디로 해당 역 찾기
+ *     parameters:
+ *       - in: path
+ *         name: station id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: 역 찾기 성공
+ */
+
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const station = await Station.findByPk(id);
+    if (!station) {
+      throw new HttpException(400, '해당하는 역은 없습니다.');
+      return;
+    }
+    res.status(200).send(station);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @swagger
  * /stations/{name}:
  *   delete:
  *   summary: 역 삭제
