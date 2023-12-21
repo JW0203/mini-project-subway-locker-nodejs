@@ -70,6 +70,21 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /lockers/{id}:
+ *   get:
+ *     summary: 사물함 아이디로 사물함 찾기
+ *     parameters:
+ *       - in: path
+ *         name: locker id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: 사물함 찾기 성공
+ */
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
