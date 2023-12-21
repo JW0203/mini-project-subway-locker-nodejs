@@ -70,6 +70,22 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const foundLocker = await Locker.findByPk(id);
+
+    if (!foundLocker) {
+      throw new HttpException(400, '없는 사물함 아이디 입니다.');
+      return;
+    }
+
+    res.status(200).send(foundLocker);
+  } catch (err) {
+    next();
+  }
+});
+
 /**
  * @swagger
  * /lockers/use:
