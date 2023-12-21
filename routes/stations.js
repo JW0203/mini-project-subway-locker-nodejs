@@ -1,4 +1,4 @@
-const { Station } = require('../models');
+const { Station, Locker } = require('../models');
 const express = require('express');
 const router = express.Router();
 const sequelize = require('../config/database');
@@ -87,17 +87,28 @@ router.get('/', async (req, res, next) => {
  *         required: true
  *     responses:
  *       200:
- *         description: 역 찾기 성공
+ *         description: 역 위치와 해당 역에 있는 사물함 찾기 성공
  */
 
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const station = await Station.findByPk(id);
+
+    const station = await Station.findAll({
+      where: { id },
+      include: [
+        {
+          model: Locker,
+          where: { stationId: id },
+        },
+      ],
+    });
+
     if (!station) {
       throw new HttpException(400, '해당하는 역은 없습니다.');
       return;
     }
+
     res.status(200).send(station);
   } catch (err) {
     next(err);
