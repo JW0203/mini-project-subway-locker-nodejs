@@ -72,6 +72,37 @@ router.get('/', async (req, res, next) => {
 
 /**
  * @swagger
+ * /lockers/{id}:
+ *   get:
+ *     summary: 사물함 아이디로 사물함 찾기
+ *     parameters:
+ *       - in: path
+ *         name: locker id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: 사물함 찾기 성공
+ */
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const foundLocker = await Locker.findByPk(id);
+
+    if (!foundLocker) {
+      throw new HttpException(400, '없는 사물함 아이디 입니다.');
+      return;
+    }
+
+    res.status(200).send(foundLocker);
+  } catch (err) {
+    next();
+  }
+});
+
+/**
+ * @swagger
  * /lockers/use:
  *   patch:
  *     summary: 역에 있는 라커 사용
