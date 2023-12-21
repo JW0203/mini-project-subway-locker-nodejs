@@ -1,4 +1,4 @@
-const {Station} = require('../models');
+const { Station } = require('../models');
 const express = require('express');
 const router = express.Router();
 const sequelize = require('../config/database');
@@ -31,28 +31,48 @@ const HttpException = require('../middleware/HttpException');
  *
  */
 router.post('/', async (req, res, next) => {
-	try{
-		const {data} = req.body;
-		const newStations = []
-		for(let n in data){
-			const {name, latitude, longitude} = data[n];
-			const stationDuplication = await Station.findOne({
-				where:{name}
-			})
-			if (stationDuplication){
-				throw new HttpException(400, `${name} 은 이미 저장되어 있습니다.`);
-				return;
-			}
-			const station = await Station.create({
-				name, latitude, longitude
-			})
-			newStations.push(station)
-		}
-		res.status(201).send(newStations);
-	}catch(err){
-		next(err);
-	}
-})
+  try {
+    const { data } = req.body;
+    const newStations = [];
+    for (let n in data) {
+      const { name, latitude, longitude } = data[n];
+      const stationDuplication = await Station.findOne({
+        where: { name },
+      });
+      if (stationDuplication) {
+        throw new HttpException(400, `${name} 은 이미 저장되어 있습니다.`);
+        return;
+      }
+      const station = await Station.create({
+        name,
+        latitude,
+        longitude,
+      });
+      newStations.push(station);
+    }
+    res.status(201).send(newStations);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @swagger
+ * /stations:
+ *   get:
+ *     summary: 모든 역 찾기
+ *     responses:
+ *       200:
+ *         description: 모든 역 찾기 성공
+ */
+router.get('/', async (req, res, next) => {
+  try {
+    const allStations = await Station.findAll();
+    res.status(200).send(allStations);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
@@ -71,19 +91,18 @@ router.post('/', async (req, res, next) => {
  *
  */
 router.delete('/:name', async (req, res, next) => {
-	try{
-		const name = req.params.name;
-		const nameValidation = await Station.findOne({
-			where:{name}
-		});
-		if(!nameValidation){
-			throw new HttpException(400, "없는 역이름 입니다.")
-		}
-		await Station.destroy({where:{name}});
-		res.status(204).send()
-
-	}catch(err){
-		next(err)
-	}
-})
+  try {
+    const name = req.params.name;
+    const nameValidation = await Station.findOne({
+      where: { name },
+    });
+    if (!nameValidation) {
+      throw new HttpException(400, '없는 역이름 입니다.');
+    }
+    await Station.destroy({ where: { name } });
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
 module.exports = router;
