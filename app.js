@@ -16,7 +16,7 @@ const {
   stationsRouter,
 } = require('./routes');
 
-//sequelize.sync({ force: true });
+sequelize.sync({ force: true });
 app.use(express.json());
 app.use(cookieParser());
 
