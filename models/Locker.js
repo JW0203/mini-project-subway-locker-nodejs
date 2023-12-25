@@ -21,6 +21,9 @@ const Locker = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    status:{
+        type: DataTypes.STRING,
+      }
   },
   { underscored: true },
 );

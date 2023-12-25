@@ -7,7 +7,7 @@ const Comment = sequelize.define('comments', {
 		autoIncrement: true,
 		primaryKey: true
 	},
-	comment:{
+	content:{
 		type: DataTypes.STRING
 	},
 	createdAt:{
