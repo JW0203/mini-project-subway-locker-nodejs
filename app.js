@@ -1,11 +1,12 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const app = express();
-const port = 3000;
 const sequelize = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swaggerDef');
 const HttpException = require('./middleware/HttpException');
+
+const app = express();
+const port = 3000;
 const {
   mapRouter,
   lockerRouter,
@@ -16,7 +17,7 @@ const {
   stationsRouter,
 } = require('./routes');
 
-sequelize.sync({ force: true });
+//sequelize.sync({ force: true });
 app.use(express.json());
 app.use(cookieParser());
 

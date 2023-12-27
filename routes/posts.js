@@ -69,32 +69,52 @@ router.post('/', authenticateToken, async (req, res, next) => {
 
 /**
  * @swagger
- * /posts:
+ * /posts/?limit=number&page=number:
  *   get:
- *     summary: 모든 게시물 찾기
+ *     summary: 찾은 모든 게시물을 페이지네이션
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: 페이지 당 보여줄 게시물의 수
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: 보고 싶은 페이지 번호
  *     responses:
  *       200:
- *         description: 모든 게시물 찾기 성공
- *         application/json:
- *           schema:
- *             title:
- *               type:string
- *             content:
- *               type: string
- *             userId:
- *               type: integer
+ *         description: 해당 페이지안에 있는 게시물 찾기 성공
  */
+router.get('/', async (req, res, next) =>{
+  try{
+    const page = req.query.page;
+    const limit =  Number(req.query.limit) || 5;
+    const offset = limit * (page - 1)
 
-router.get('/', async (req, res, next) => {
-  try {
-    const allPosts = await Post.findAll({
-      order: [['createdAt', 'DESC']],
-    });
-    res.status(200).send(allPosts);
-  } catch (err) {
-    next(err);
+    const {count, rows} = await Post.findAndCountAll({
+      order: [['id', 'DESC'], ['createdAt', 'DESC']],
+      limit,
+      offset,
+    })
+
+    if (rows.length === 0){
+      throw new HttpException(400, "없는 페이지 입니다.");
+      return;
+    }
+
+    const posts = await Post.findAll({
+      order:[['id', 'DESC'], ['createdAt', 'DESC']],
+      limit,
+      offset,
+    })
+    res.status(200).send(posts);
+
+  }catch(err){
+    next(err)
   }
-});
+})
 
 /**
  * @swagger
