@@ -93,7 +93,7 @@ router.get('/', async (req, res, next) =>{
     const limit =  Number(req.query.limit) || 5;
 
     if (page === 0){
-      throw new HttpException(400, `$page {page}에 데이터가 없습니다.`);
+      throw new HttpException(400, `page는 1부터 시작합니다.`);
       return;
     }
     const offset = limit * (page - 1)
@@ -105,7 +105,7 @@ router.get('/', async (req, res, next) =>{
     })
 
     if (rows.length === 0){
-      throw new HttpException(400, "없는 페이지 입니다.");
+      throw new HttpException(400, "page ${page}에 데이터가 없습니다.");
       return;
     }
 
