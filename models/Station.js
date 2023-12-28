@@ -16,12 +16,6 @@ const Station = sequelize.define('stations', {
 	},
 	longitude:{
 		type: DataTypes.FLOAT
-	},
-	temperature:{
-		type: DataTypes.FLOAT
-	},
-	humidity:{
-		type: DataTypes.FLOAT
 	}
 }, {underscored: true})
 
