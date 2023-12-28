@@ -1,8 +1,18 @@
+require('dotenv').config();
 const { Station, Locker } = require('../models');
 const express = require('express');
 const router = express.Router();
-const sequelize = require('../config/database');
+const fetch = require('node-fetch');
 const HttpException = require('../middleware/HttpException');
+
+async function checkWeather(station){
+  const appId =  process.env.WEATHER_API_KEY;
+  const lati = station.latitude;
+  const longi = station.longitude;
+  const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lati}&lon=${longi}&appid=${appId}&lang=kr&units=metric`;
+  const response = await fetch(apiUrl);
+  return await response.json();
+}
 
 /**
  * @swagger
@@ -34,15 +44,18 @@ router.post('/', async (req, res, next) => {
   try {
     const { data } = req.body;
     const newStations = [];
+
     for (let n in data) {
       const { name, latitude, longitude } = data[n];
       const stationDuplication = await Station.findOne({
         where: { name },
       });
+
       if (stationDuplication) {
         throw new HttpException(400, `${name} 은 이미 저장되어 있습니다.`);
         return;
       }
+
       const station = await Station.create({
         name,
         latitude,
@@ -78,7 +91,7 @@ router.get('/', async (req, res, next) => {
  * @swagger
  * /stations/{id}:
  *   get:
- *     summary: 역 아이디로 해당 역 찾기
+ *     summary: 역 아이디로 해당 역 정보 찾기
  *     parameters:
  *       - in: path
  *         name: station id
@@ -94,7 +107,7 @@ router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
 
-    const station = await Station.findAll({
+    const station = await Station.findOne({
       where: { id },
       include: [
         {
@@ -108,6 +121,10 @@ router.get('/:id', async (req, res, next) => {
       throw new HttpException(400, '해당하는 역은 없습니다.');
       return;
     }
+
+    const weatherData = await checkWeather(station);
+    station.dataValues.temperature = weatherData.main.temp;
+    station.dataValues.humidity = weatherData.main.humidity;
 
     res.status(200).send(station);
   } catch (err) {
