@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { User } = require('../models');
+const { User, BlackList } = require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
@@ -164,22 +164,41 @@ router.post('/sign-in', async (req, res, next) => {
       }
 
       const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET_KEY, {
-        expiresIn: '1w',
+        expiresIn: '1d',
       });
-      res.cookie('token', accessToken).status(200).send('로그인에 성공하였습니다.');
+
+      const tokenValidation = await BlackList.findOne({ where: { accessToken } });
+      if (tokenValidation) {
+        throw new HttpException(400, '토큰이 블랙리스트에 있습니다.');
+        return;
+      }
+
+      const ondDayTimeStamp = 24 * 60 * 60 * 1000;
+      const expiryDate = Date.now() + ondDayTimeStamp;
+      await BlackList.create({
+        accessToken,
+        expiryDate,
+      });
+
+      localStorage.setItem('access_token', accessToken);
+
+      res.status(200).send('로그인에 성공하였습니다.');
     });
   } catch (err) {
     next(err);
   }
 });
 
-router.get('/sign-out', authenticateToken, async (req, res, next) => {
+router.delete('/sign-out', authenticateToken, async (req, res, next) => {
   const id = req.user.id;
   const user = await User.findByPk(id);
   const userEmail = user.email;
-  console.log(user);
+  const accessToken = localStorage.getItem('access_token');
 
-  res.cookie('token', '').status(200).send(`${userEmail} 님 로그 아웃 되었습니다.`);
+  await BlackList.destroy({ where: { accessToken } });
+  localStorage.removeItem('access_token');
+
+  res.status(204).send(`${userEmail} 님 로그 아웃 되었습니다.`);
 });
 
 module.exports = router;

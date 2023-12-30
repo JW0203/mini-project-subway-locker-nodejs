@@ -3,6 +3,7 @@ const User = require('./User');
 const Station = require('./Station');
 const Post = require('./Post');
 const Comment = require('./Comment');
+const BlackList = require('./BlackList')
 
 // posts and comment
 Post.hasMany(Comment, { foreignKey: 'postId' });
@@ -22,4 +23,5 @@ module.exports = {
   Station,
   Post,
   Comment,
+  BlackList
 };
