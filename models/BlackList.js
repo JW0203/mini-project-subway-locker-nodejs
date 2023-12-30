@@ -8,10 +8,7 @@ const BlackList = sequelize.define('blackList', {
     autoIncrement: true,
     primaryKey: true
   },
-  token:{
-    type: DataTypes.STRING
-  },
-  refreshedToken:{
+  accessToken:{
     type: DataTypes.STRING
   },
   expiryDate:{
