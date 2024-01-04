@@ -132,17 +132,31 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
       return;
     }
 
+    if (idValidation.status === 'occupied') {
+      throw new HttpException(400, '선택하신 사물함은 다른 회원이 사용중 입니다.');
+      return;
+    }
+
+    if (idValidation.status === 'under management') {
+      throw new HttpException(400, '선택하신 사물함은 관리중 입니다.');
+      return;
+    }
+
     const userValidation = await User.findByPk(userId);
     if (!userValidation) {
       throw new HttpException(400, '존재하지 않는 유저입니다.');
       return;
     }
 
+    if (userId === idValidation.userId) {
+      throw new HttpException(400, '선택하신 사물함은 회원님이 이미 사용중입니다.');
+    }
     const startDate = Date.now();
     await Locker.update(
       {
         userId,
         startDate,
+        status: 'occupied',
       },
       { where: { id } },
     );
