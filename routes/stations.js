@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const fetch = require('node-fetch');
 const HttpException = require('../middleware/HttpException');
+const authenticateToken = require('../middleware/authenticateToken');
 
 async function checkWeather(station) {
   const appId = process.env.WEATHER_API_KEY;
@@ -103,18 +104,12 @@ router.get('/', async (req, res, next) => {
  *         description: 역 위치와 해당 역에 있는 사물함 찾기 성공
  */
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', authenticateToken, async (req, res, next) => {
   try {
     const id = req.params.id;
-
+    const userId = req.user.id;
     const station = await Station.findOne({
       where: { id },
-      include: [
-        {
-          model: Locker,
-          where: { stationId: id },
-        },
-      ],
     });
 
     if (!station) {
@@ -126,6 +121,18 @@ router.get('/:id', async (req, res, next) => {
     station.dataValues.temperature = weatherData.main.temp;
     station.dataValues.humidity = weatherData.main.humidity;
 
+    const lockers = await Locker.findAll({
+      where: { stationId: id },
+    });
+
+    const lockerInfo = [];
+    for (let i = 0; i < lockers.length; i++) {
+      if (lockers[i].dataValues.userId === userId) {
+        lockers[i].dataValues.status = 'my locker';
+      }
+      lockerInfo.push(lockers[i].dataValues);
+    }
+    station.dataValues.lockers = lockerInfo;
     res.status(200).send(station);
   } catch (err) {
     next(err);
