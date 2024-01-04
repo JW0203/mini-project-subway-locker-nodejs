@@ -132,6 +132,16 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
       return;
     }
 
+    if (idValidation.status === 'occupied') {
+      throw new HttpException(400, '선택하신 사물함은 다른 회원이 사용중 입니다.');
+      return;
+    }
+
+    if (idValidation.status === 'under management') {
+      throw new HttpException(400, '선택하신 사물함은 관리중 입니다.');
+      return;
+    }
+
     const userValidation = await User.findByPk(userId);
     if (!userValidation) {
       throw new HttpException(400, '존재하지 않는 유저입니다.');
@@ -143,6 +153,7 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
       {
         userId,
         startDate,
+        status: 'occupied',
       },
       { where: { id } },
     );
