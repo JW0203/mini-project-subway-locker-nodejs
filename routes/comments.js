@@ -61,17 +61,72 @@ router.post('/', async (req, res, next) => {
 
 /**
  * @swagger
- * /comments:
+ * /comments/?limit=number&page=number:
  *   get:
- *     summary: 게시된 모든 댓글 검색
+ *     summary: 찾은 모든 댓글들을 페이지네이션
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: 페이지 당 보여줄 댓글의 수
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: 보고 싶은 페이지 번호
  *     responses:
  *       200:
- *         description: 댓글 검색 성공
+ *         description: 해당 페이지안에 있는 댓글 찾기 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                   content:
+ *                     type: string
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   postId:
+ *                     type: number
  */
 router.get('/', async (req, res, next) => {
   try {
+    const page = req.query.page;
+    const limit = Number(req.query.limit) || 5;
+    if (page === '0') {
+      throw new HttpException(400, `page는 1부터 시작합니다.`);
+      return;
+    }
+    const offset = limit * (page - 1);
+    const { count, rows } = await Comment.findAndCountAll({
+      order: [
+        ['id', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
+      limit,
+      offset,
+    });
+
+    if (rows.length === 0) {
+      throw new HttpException(400, 'page ${page}에 데이터가 없습니다.');
+      return;
+    }
     const allComments = await Comment.findAll({
-      order: [['postId', 'ASC']],
+      order: [
+        ['postId', 'ASC'],
+        ['createdAt', 'DESC'],
+      ],
+      limit,
+      offset,
     });
     res.status(200).send(allComments);
   } catch (err) {
