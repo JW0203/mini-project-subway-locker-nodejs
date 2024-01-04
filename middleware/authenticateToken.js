@@ -2,10 +2,10 @@ const jwt = require('jsonwebtoken');
 const HttpException = require('./HttpException');
 
 const authenticateToken = (req, res, next) => {
-  const token = localStorage.getItem("access_token")
+  const token = localStorage.getItem('access_token');
 
   if (!token) {
-    throw new HttpException(400, 'Header에 JWT 토큰을 입력해 주세요.');
+    throw new HttpException(400, 'JWT 토큰을 입력해 주세요.');
     return;
   }
 
