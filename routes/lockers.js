@@ -148,6 +148,9 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
       return;
     }
 
+    if (userId === idValidation.userId) {
+      throw new HttpException(400, '선택하신 사물함은 회원님이 이미 사용중입니다.');
+    }
     const startDate = Date.now();
     await Locker.update(
       {
