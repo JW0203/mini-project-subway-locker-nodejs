@@ -5,8 +5,8 @@ const router = express.Router();
 const fetch = require('node-fetch');
 const HttpException = require('../middleware/HttpException');
 
-async function checkWeather(station){
-  const appId =  process.env.WEATHER_API_KEY;
+async function checkWeather(station) {
+  const appId = process.env.WEATHER_API_KEY;
   const lati = station.latitude;
   const longi = station.longitude;
   const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lati}&lon=${longi}&appid=${appId}&lang=kr&units=metric`;
@@ -157,6 +157,7 @@ router.delete('/:name', async (req, res, next) => {
     if (!nameValidation) {
       throw new HttpException(400, '없는 역이름 입니다.');
     }
+    await Locker.destroy({ where: { stationId: nameValidation.id } });
     await Station.destroy({ where: { name } });
     res.status(204).send();
   } catch (err) {
