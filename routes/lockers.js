@@ -7,7 +7,7 @@ const authenticateToken = require('../middleware/authenticateToken');
 
 /**
  * @swagger
- * /stations/make:
+ * /lockers:
  *   post:
  *     summary: 역에 라커 추가하기
  *     requestBody:
@@ -20,13 +20,44 @@ const authenticateToken = require('../middleware/authenticateToken');
  *               name:
  *                 type: string
  *               n:
- *                 type: integer
+ *                 type: number
  *     responses:
  *       201:
  *         description: 라커 추가 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               nullable: true
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   default: "unoccupied"
+ *                 id:
+ *                   type: number
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                   nullable: true
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                   nullable: true
+ *                 userId:
+ *                   type: number
+ *                   nullable: true
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 stationId:
+ *                   type: number
+ *                   nullable: true
+ *
  */
 
-router.post('/make', async (req, res, next) => {
+router.post('/', async (req, res, next) => {
   try {
     const { name, n } = req.body;
     const station = await Station.findOne({
@@ -37,14 +68,17 @@ router.post('/make', async (req, res, next) => {
       return;
     }
 
+    let newLockers = [];
     await sequelize.transaction(async () => {
       const stationId = station.id;
       for (let i = 0; i < n; i++) {
         const newLocker = await Locker.create({
           stationId,
         });
+        newLockers.push(newLocker);
       }
-      res.status(201).send(`${n}개의 라커가 ${name}에 생성되었습니다.`);
+      // res.status(201).send(`${n}개의 라커가 ${name}에 생성되었습니다.`);
+      res.status(201).send(newLockers);
     });
   } catch (err) {
     next(err);
@@ -55,11 +89,33 @@ router.post('/make', async (req, res, next) => {
  * @swagger
  * /lockers:
  *   get:
- *     summary: 모든 사물함 검색
- *     description: 모든 역에 있는 사물함 검색
+ *     summary: 모든 사물함 찾기
  *     responses:
  *       200:
- *         조회 성공
+ *         description: 모든 사물함 찾기 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                   startDate:
+ *                     type: string
+ *                     format: date-time
+ *                   endDate:
+ *                     type: string
+ *                     format: date-time
+ *                   status:
+ *                     type: string
+ *                     default: "unoccupied"
+ *                   stationId:
+ *                     type: number
+ *                   userId:
+ *                     type: number
+ *
  */
 router.get('/', async (req, res, next) => {
   try {
@@ -74,17 +130,40 @@ router.get('/', async (req, res, next) => {
  * @swagger
  * /lockers/{id}:
  *   get:
- *     summary: 사물함 아이디로 사물함 찾기
+ *     summary: 사물함 검색
+ *     description: 사물함 아이디를 입력해서 해당 사물함 정보 검색
  *     parameters:
  *       - in: path
- *         name: locker id
+ *         name: id
  *         schema:
- *           type: integer
+ *           type: number
  *         required: true
  *     responses:
  *       200:
- *         description: 사물함 찾기 성공
+ *         description: 검색 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                 status:
+ *                   type: string
+ *                   default: "unoccupied"
+ *                 stationId:
+ *                   type: number
+ *                 userId:
+ *                   type: number
+ *
  */
+
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -105,22 +184,41 @@ router.get('/:id', async (req, res, next) => {
  * @swagger
  * /lockers/use:
  *   patch:
- *     summary: 역에 있는 라커 사용
+ *     summary: 로그인한 유저가 선택한 라커 대여
  *     requestBody:
- *       description: 라커 id, 유저 id, 역 id,
+ *       description: 유저가 선택한 락커의 id 를 바디에서 획득, 유저의 아이디는 는 localstorage 에 있는 토큰을 이용하여 인증 후 req.user 에서 획득,
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             properties:
- *               name:
- *                 type: string
- *               n:
- *                 type: integer
+ *               id:
+ *                 type: number
  *     responses:
  *       200:
- *        라커 대여 성공
- *
+ *         description: 라커 대여 요청 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                   nullable: true
+ *                   example: null
+ *                 status:
+ *                   type: string
+ *                   example: "occupied"
+ *                 stationId:
+ *                   type: number
+ *                 userId:
+ *                   type: number
  */
 router.patch('/use', authenticateToken, async (req, res, next) => {
   const { id } = req.body;
@@ -170,23 +268,47 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
 
 /**
  * @swagger
- * /lockers/end:
+ * /lockers/end-use:
  *   patch:
- *     summary: 역에 있는 라커 사용 종료
+ *     summary: 라커 사용 종료
  *     requestBody:
- *       description: 라커 id
+ *       description: 유저가 사용중인 라커 id를 이용하여 사용종료하고 사용한 시간을 전송
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             properties:
  *               id:
- *                 type: Integer
+ *                 type: number
  *     responses:
  *       200:
- *        라커 사용 종료 요청 성공
+ *         description: 사용종료 요청 처리 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                 status:
+ *                   type: string
+ *                   example: "occupied"
+ *                 stationId:
+ *                   type: number
+ *                 userId:
+ *                   type: number
+ *                 totalUsedTime:
+ *                   type: string
+ *                   example: "총 사용한 시간은 30분 입니다."
+ *
  */
-router.patch('/end', async (req, res, next) => {
+router.patch('/end-use', async (req, res, next) => {
   try {
     const { id } = req.body;
     const idValidation = await Locker.findByPk(id);
@@ -206,13 +328,17 @@ router.patch('/end', async (req, res, next) => {
       },
       { where: { id } },
     );
-    const endLocker = await Locker.findByPk(id);
-    const dateStart = new Date(endLocker['startDate']);
+    const updatedLocker = await Locker.findOne({
+      where: { id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+    });
+    const dateStart = new Date(updatedLocker['startDate']);
     const dateEnd = new Date(endDate);
     const diffMSec = dateEnd.getTime() - dateStart.getTime();
     const diffHour = Math.round(diffMSec / (60 * 1000));
-
-    res.status(200).send(`사용한 시간은 ${diffHour}분 입니다.`);
+    const totalUsedTime = `사용한 시간은 ${diffHour}분 입니다.`;
+    updatedLocker.dataValues.totalUsedTime = totalUsedTime;
+    res.status(200).send(updatedLocker);
   } catch (err) {
     next(err);
   }
@@ -220,7 +346,7 @@ router.patch('/end', async (req, res, next) => {
 
 /**
  * @swagger
- * locker/reset:
+ * /lockers/reset:
  *   patch:
  *     summary: 결제가 확인되면 사물함 초기화
  *     requestBody:
@@ -236,7 +362,33 @@ router.patch('/end', async (req, res, next) => {
  *                 type: integer
  *     responses:
  *       200:
- *        라커 초기화 성공
+ *        description: 라커 초기화 성공
+ *        content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                   nullable: true
+ *                   example: null
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                   nullable: true
+ *                   example: null
+ *                 status:
+ *                   type: string
+ *                   example: "unoccupied"
+ *                 stationId:
+ *                   type: number
+ *                 userId:
+ *                   type: number
+ *                   nullable: true
+ *                   example: null
  */
 
 router.patch('/reset', async (req, res, next) => {
@@ -263,10 +415,14 @@ router.patch('/reset', async (req, res, next) => {
         userId: null,
         startDate: null,
         endDate: null,
+        status: 'unoccupied',
       },
       { where: { id } },
     );
-    const resetLocker = await Locker.findByPk(id);
+    const resetLocker = await Locker.findOne({
+      where: { id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+    });
     res.status(200).send(resetLocker);
   } catch (err) {
     next(err);
