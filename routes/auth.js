@@ -20,17 +20,12 @@ const authenticateToken = require('../middleware/authenticateToken');
  *         application/json:
  *           schema:
  *             properties:
- *               id:
- *                 type: integer
- *                 description: 유저의 pk 값
  *               email:
  *                 type: string
- *                 description: 유저 로그인 아이디인 이메일주소
+ *                 format: email
  *               password:
  *                 type: string
- *                 minLength: 2
- *                 maxLength: 15
- *                 description: 유저 로그인 비밀번호
+ *                 format: password
  *     responses:
  *       201:
  *         description: 회원가입 성공
@@ -38,41 +33,11 @@ const authenticateToken = require('../middleware/authenticateToken');
  *           application/json:
  *             schema:
  *               properties:
+ *                 id:
+ *                   type: number
  *                 email:
  *                   type: string
- *                   description: 가입된 이메일주소
- *                 createdAt:
- *                   type:  date-time
- *                   description: 가입한 날짜
- */
-
-/**
- * @swagger
- * /auth/sign-in:
- *   post:
- *     summary: 로그인
- *     requestBody:
- *       description: 로그인을 위해 필요한 이메일 주소와 비밀번호 요청
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *
- *     responses:
- *       201:
- *         description: 받은 이메일 주소와 비밀번호 일치, 로그인 성공
- *         content:
- *           application/json:
- *             schema:
- *               properties:
- *                 accessToken:
- *                   type: string
- *
+ *                   format: email
  */
 
 router.post('/sign-up', async (req, res, next) => {
@@ -143,6 +108,38 @@ router.post('/sign-up', async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/sign-in:
+ *   post:
+ *     summary: 로그인
+ *     requestBody:
+ *       description: 로그인을 위해 필요한 이메일 주소와 비밀번호 요청
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *
+ *     responses:
+ *       200:
+ *         description: 받은 이메일 주소와 비밀번호 일치, 로그인 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 message:
+ *                   type: "로그인 성공"
+ *                   format: string
+ *
+ */
+
 router.post('/sign-in', async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -182,12 +179,33 @@ router.post('/sign-in', async (req, res, next) => {
 
       localStorage.setItem('access_token', accessToken);
 
-      res.status(200).send('로그인에 성공하였습니다.');
+      res.status(200).send('로그인 성공');
     });
   } catch (err) {
     next(err);
   }
 });
+
+/**
+ * @swagger
+ * /auth/sign-out:
+ *   delete:
+ *     summary: 로그아웃
+ *     requestBody:
+ *       description: 로그아웃을 위해 필요한 이메일 주소요청 및 access token 가져오기
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *
+ *     responses:
+ *       204:
+ *         description: 받은 이메일 주소와 access token 일치, 로그아웃 성공
+ */
 
 router.delete('/sign-out', authenticateToken, async (req, res, next) => {
   const id = req.user.id;
@@ -198,7 +216,7 @@ router.delete('/sign-out', authenticateToken, async (req, res, next) => {
   await BlackList.destroy({ where: { accessToken } });
   localStorage.removeItem('access_token');
 
-  res.status(204).send(`${userEmail} 님 로그 아웃 되었습니다.`);
+  res.status(204).send();
 });
 
 module.exports = router;

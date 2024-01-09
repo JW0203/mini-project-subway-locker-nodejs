@@ -1,4 +1,4 @@
-const {Comment, Post} = require('../models');
+const { Comment, Post } = require('../models');
 const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
@@ -17,57 +17,122 @@ const sequelize = require('../config/database');
  *           schema:
  *             properties:
  *               postId:
- *                 type: integer
- *               comment:
+ *                 type: number
+ *               content:
  *                 type: string
  *     responses:
  *       201:
  *         description: 댓글 게시 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 postId:
+ *                   type: number
+ *                 content:
+ *                   type: string
+ *
+ *
  */
-router.post('/', async(req, res, next) => {
-	try{
-		const {postId, comment} = req.body;
-		const validPost = await Post.findByPk(postId);
-		if(!validPost){
-			if(!postId){
-				throw new HttpException(400, `게시물 아이디: ${postId}`);
-				return
-			}
-			throw new HttpException(400, "해당 포스트가 없습니다.");
-			return;
-		}
+router.post('/', async (req, res, next) => {
+  try {
+    const { postId, content } = req.body;
+    const validPost = await Post.findByPk(postId);
+    if (!validPost) {
+      if (!postId) {
+        throw new HttpException(400, `게시물 아이디: ${postId}`);
+        return;
+      }
+      throw new HttpException(400, '해당 포스트가 없습니다.');
+      return;
+    }
 
-		await sequelize.transaction(async () =>{
-			const newComment = await Comment.create({
-				comment,
-				postId
-			});
-			res.status(201).send(newComment);
-		})
-	}catch(err){
-		next(err);
-	}
-})
+    await sequelize.transaction(async () => {
+      const newComment = await Comment.create({
+        content,
+        postId,
+      });
+      res.status(201).send(newComment);
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
- * /comments:
+ * /comments/?limit=number&page=number:
  *   get:
- *     summary: 게시된 모든 댓글 검색
+ *     summary: 찾은 모든 댓글들을 페이지네이션
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: 페이지 당 보여줄 댓글의 수
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: 보고 싶은 페이지 번호
  *     responses:
  *       200:
- *         description: 댓글 검색 성공
+ *         description: 해당 페이지안에 있는 댓글 찾기 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                   content:
+ *                     type: string
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   postId:
+ *                     type: number
  */
-router.get('/', async(req, res, next)=>{
-	try{
-		const allComments = await Comment.findAll({
-			order:[['postId', 'ASC']]
-		});
-		res.status(200).send(allComments)
-	}catch (err){
-		next(err);
-	}
-})
+router.get('/', async (req, res, next) => {
+  try {
+    const page = req.query.page;
+    const limit = Number(req.query.limit) || 5;
+    if (page === '0') {
+      throw new HttpException(400, `page는 1부터 시작합니다.`);
+      return;
+    }
+    const offset = limit * (page - 1);
+    const { count, rows } = await Comment.findAndCountAll({
+      order: [
+        ['id', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
+      limit,
+      offset,
+    });
+
+    if (rows.length === 0) {
+      throw new HttpException(400, 'page ${page}에 데이터가 없습니다.');
+      return;
+    }
+    const allComments = await Comment.findAll({
+      order: [
+        ['postId', 'ASC'],
+        ['createdAt', 'DESC'],
+      ],
+      limit,
+      offset,
+    });
+    res.status(200).send(allComments);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
@@ -84,51 +149,54 @@ router.get('/', async(req, res, next)=>{
  *       200:
  *         description: 게시물 아이디에 해당하는 댓글 찾기 성공
  */
-router.get('/:postId', async(req, res, next)=>{
-	try{
-		const postId = req.params.postId;
-		const allComments = await Comment.findAll({
-			where:{postId},
-			order:[['postId', 'ASC']]
-		});
-		if(!allComments){
-			throw new HttpException(400, "해당하는 게시물 아이디가 없습니다.");
-			return;
-		}
-		res.status(200).send(allComments)
-	}catch (err){
-		next(err);
-	}
-})
+router.get('/:postId', async (req, res, next) => {
+  try {
+    const postId = req.params.postId;
+    const allComments = await Comment.findAll({
+      where: { postId },
+      order: [['postId', 'ASC']],
+    });
+    if (!allComments) {
+      throw new HttpException(400, '해당하는 게시물 아이디가 없습니다.');
+      return;
+    }
+    res.status(200).send(allComments);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * @swagger
  * /comments/{id}:
  *   delete:
  *     summary: 댓글 삭제
+ *     description: 해당 아이디에 상응하는 댓글 삭제
  *     parameters:
  *       - in: path
- *         name: 댓글 아이디
+ *         name: id
  *         schema:
- *           type: integer
- *         required: true
+ *           type: number
+ *         required: ture
  *     responses:
  *       204:
- *         description:댓글 삭제 성공
+ *         description: 삭제성공
+ *
+ *
  */
-router.delete('/:id', async (req, res, next) =>{
-	try{
-		const id = req.params.id;
-		const validId = await Comment.findByPk(id);
-		if(!validId){
-			throw new HttpException(400, "존재하지 않는 댓글입니다.");
-			return;
-		}
-		await Comment.destroy({where: {id} });
-		res.status(204).send()
-	} catch(err){
-		next(err);
-	}
-})
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const validId = await Comment.findByPk(id);
+    if (!validId) {
+      throw new HttpException(400, '존재하지 않는 댓글입니다.');
+      return;
+    }
+    await Comment.destroy({ where: { id } });
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = router;

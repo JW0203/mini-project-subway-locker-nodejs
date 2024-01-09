@@ -11,7 +11,7 @@ const authenticateToken = require('../middleware/authenticateToken');
  *   post:
  *     summary: 문의사항 게시
  *     requestBody:
- *       description: 문의 사항을 게시하기위한 제목과 내용
+ *       description: 로그인 한 유저가 문의 사항을 게시하기위한 제목과 내용, jwt 토큰은 local storage 에서 읽어온다.
  *       required: true
  *       content:
  *         application/json:
@@ -19,7 +19,7 @@ const authenticateToken = require('../middleware/authenticateToken');
  *             properties:
  *               email:
  *                 type: string
- *                 description: 유저 로그인 여부 확인용
+ *                 format: email
  *               title:
  *                 type: string
  *               content:
@@ -31,14 +31,21 @@ const authenticateToken = require('../middleware/authenticateToken');
  *           application.json:
  *             schema:
  *               properties:
+ *                 id:
+ *                   type: number
  *                 title:
  *                   type: string
- *                   description: 게시된 게시물 제목
  *                 content:
  *                   type: string
- *                   description: 게시된 게시물 내용
  *                 userId:
- *                   type: Integer
+ *                   type: number
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *
  */
 
 router.post('/', authenticateToken, async (req, res, next) => {
@@ -86,69 +93,109 @@ router.post('/', authenticateToken, async (req, res, next) => {
  *     responses:
  *       200:
  *         description: 해당 페이지안에 있는 게시물 찾기 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                   title:
+ *                     type: string
+ *                   content:
+ *                     type: string
+ *                   userId:
+ *                     type: number
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
  */
-router.get('/', async (req, res, next) =>{
-  try{
+router.get('/', async (req, res, next) => {
+  try {
     const page = req.query.page;
-    const limit =  Number(req.query.limit) || 5;
+    const limit = Number(req.query.limit) || 5;
 
-    if (page === 0){
+    if (page === '0') {
       throw new HttpException(400, `page는 1부터 시작합니다.`);
       return;
     }
-    const offset = limit * (page - 1)
+    const offset = limit * (page - 1);
 
-    const {count, rows} = await Post.findAndCountAll({
-      order: [['id', 'DESC'], ['createdAt', 'DESC']],
+    const { count, rows } = await Post.findAndCountAll({
+      order: [
+        ['id', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
       limit,
       offset,
-    })
+    });
 
-    if (rows.length === 0){
-      throw new HttpException(400, "page ${page}에 데이터가 없습니다.");
+    if (rows.length === 0) {
+      throw new HttpException(400, `page ${page}에 데이터가 없습니다.`);
       return;
     }
 
     const posts = await Post.findAll({
-      order:[['id', 'DESC'], ['createdAt', 'DESC']],
+      order: [
+        ['id', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
       limit,
       offset,
-    })
+    });
     res.status(200).send(posts);
-
-  }catch(err){
-    next(err)
+  } catch (err) {
+    next(err);
   }
-})
+});
 
 /**
  * @swagger
- * /posts/user-id/{email}:
+ * /posts/user-email/{email}:
  *   get:
  *     summary: 유저 이메일로 유저가 게시한 게시물 찾기
  *     parameters:
  *       - in: path
- *         name: user email
+ *         name: email
  *         schema:
  *           type: string
+ *           format: email
  *         required: true
- *         description: 이 메일 포멧
+ *         description: 유저 이메일
  *     responses:
  *       200:
  *         description: 유저가 게시한 게시물 찾기 성공
- *         application/json:
- *           schema:
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               userId:
- *                 type: integer
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                   title:
+ *                     type: string
+ *                   content:
+ *                     type: string
+ *                   userId:
+ *                     type: number
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
  */
-router.get('/user-id/:email', async (req, res, next) => {
+router.get('/user-email/:email', async (req, res, next) => {
   try {
     const email = req.params.email;
+    console.log(email);
     const user = await User.findOne({
       where: { email },
     });
@@ -172,29 +219,39 @@ router.get('/user-id/:email', async (req, res, next) => {
 
 /**
  * @swagger
- * /posts/{id}:
+ * /posts/post-id/{id}:
  *   get:
  *     summary: 게시물 아이디를 이용한 게시물 검색
  *     parameters:
  *       - in: path
  *         name: id
  *         schema:
- *           type: integer
+ *           type: number
  *         required: true
+ *         description: 게시물 아이디
  *     responses:
  *       200:
  *         description: 게시물 검색 성공
- *         application/json:
- *           schema:
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               userId:
- *                 type: integer
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 id:
+ *                  type: number
+ *                 title:
+ *                   type: string
+ *                 content:
+ *                   type: string
+ *                 userId:
+ *                   type: number
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/post-id/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
     const foundPosts = await Post.findByPk(id);
@@ -218,31 +275,41 @@ router.get('/:id', async (req, res, next) => {
  *       - in: path
  *         name: id
  *         schema:
- *           type: integer
+ *           type: number
  *         required: true
+ *         description: 게시물 아이디
  *     requestBody:
  *       description: 수정 할 title 과 content
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             title:
- *               type: string
- *             content:
- *               type: sting
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
  *     responses:
  *       200:
  *         description: 수정 성공, 수정된 게시글 제공
  *         content:
  *           application/json:
  *             schema:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               userId:
- *                 type: integer
- *
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 title:
+ *                   type: string
+ *                 content:
+ *                   type: string
+ *                 userId:
+ *                   type: number
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
  *
  */
 
@@ -274,17 +341,18 @@ router.patch('/:id', async (req, res, next) => {
  * @swagger
  * /posts/{id}:
  *   delete:
- *   summary: 게시물 삭제
- *   description: 게시물 삭제전에 댓글이 있으면 댓글도 삭제 후 게시물 삭제
- *   parameters:
- *     - in: path
- *       name: id
- *       schema:
- *         type: integer
- *       required: ture
- *   responses:
- *     204:
- *       description: 삭제성공
+ *     summary: 게시물 삭제
+ *     description: 게시물 삭제전에 댓글이 있으면 댓글도 삭제 후 게시물 삭제
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: number
+ *         required: ture
+ *     responses:
+ *       204:
+ *         description: 삭제성공
+ *
  *
  */
 router.delete('/:id', async (req, res, next) => {

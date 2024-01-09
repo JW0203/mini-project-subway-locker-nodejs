@@ -21,7 +21,7 @@ async function checkWeather(station) {
  *   post:
  *     summary: 역 추가
  *     requestBody:
- *       description: 역 추가를 위한 이름, 좌표 값
+ *       description: 역 추가를 위한 이름, 좌표 값 필요
  *       required: true
  *       content:
  *         application/json:
@@ -78,6 +78,29 @@ router.post('/', async (req, res, next) => {
  *     responses:
  *       200:
  *         description: 모든 역 찾기 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: number
+ *                   name:
+ *                     type: string
+ *                   latitude:
+ *                     type: number
+ *                     format: float
+ *                   longitude:
+ *                     type: number
+ *                     format: float
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
  */
 router.get('/', async (req, res, next) => {
   try {
@@ -92,18 +115,58 @@ router.get('/', async (req, res, next) => {
  * @swagger
  * /stations/{id}:
  *   get:
- *     summary: 역 아이디로 해당 역 정보 찾기
+ *     summary: 역 아이디로 해당 역 정보 찾기, 로그인 인증 필수, 토큰은 localstorage 에 저장 되어 있는 것을 이용
  *     parameters:
  *       - in: path
- *         name: station id
+ *         name: id
  *         schema:
  *           type: integer
  *         required: true
  *     responses:
  *       200:
  *         description: 역 위치와 해당 역에 있는 사물함 찾기 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 name:
+ *                   type: string
+ *                 latitude:
+ *                   type: number
+ *                   format: float
+ *                 longitude:
+ *                   type: number
+ *                   format: float
+ *                 temperature:
+ *                   type: number
+ *                   format: float
+ *                 humidity:
+ *                   type: number
+ *                   format: float
+ *                 lockers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       startDate:
+ *                         type: string
+ *                         format: date-time
+ *                       endDate:
+ *                         type: string
+ *                         format: date-time
+ *                       status:
+ *                         type: string
+ *                         default: "unoccupied"
+ *                       userId:
+ *                         type: number
+ *                       stationID:
+ *                         type: number
+ *
  */
-
 router.get('/:id', authenticateToken, async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -143,7 +206,7 @@ router.get('/:id', authenticateToken, async (req, res, next) => {
  * @swagger
  * /stations/{name}:
  *   delete:
- *   summary: 역 삭제
+ *   summary: 역 이름을 이용하여 해당역을 삭제
  *   parameters:
  *     - in: path
  *       name: name
