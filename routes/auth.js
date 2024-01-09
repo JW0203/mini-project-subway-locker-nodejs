@@ -128,15 +128,15 @@ router.post('/sign-up', async (req, res, next) => {
  *                 format: password
  *
  *     responses:
- *       200:
- *         description: 받은 이메일 주소와 비밀번호 일치, 로그인 성공
+ *       201:
+ *         description: 받은 이메일 주소와 비밀번호 일치, 로그인 성공, access token은 local storage 에 저장
  *         content:
  *           application/json:
  *             schema:
  *               properties:
- *                 message:
- *                   type: "로그인 성공"
- *                   format: string
+ *                 accessToken:
+ *                   type: string
+ *                   example: "jwt-access-token"
  *
  */
 
@@ -179,7 +179,7 @@ router.post('/sign-in', async (req, res, next) => {
 
       localStorage.setItem('access_token', accessToken);
 
-      res.status(200).send('로그인 성공');
+      res.status(201).send(accessToken);
     });
   } catch (err) {
     next(err);
@@ -204,7 +204,7 @@ router.post('/sign-in', async (req, res, next) => {
  *
  *     responses:
  *       204:
- *         description: 받은 이메일 주소와 access token 일치, 로그아웃 성공
+ *         description: 로그아웃 성공 - 받은 이메일 주소와 access token 일치, local storage에 있는 access token 삭제
  */
 
 router.delete('/sign-out', authenticateToken, async (req, res, next) => {

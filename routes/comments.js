@@ -27,10 +27,18 @@ const sequelize = require('../config/database');
  *           application/json:
  *             schema:
  *               properties:
- *                 postId:
+ *                 id:
  *                   type: number
  *                 content:
  *                   type: string
+ *                 postId:
+ *                   type: number
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
  *
  *
  */
@@ -136,31 +144,46 @@ router.get('/', async (req, res, next) => {
 
 /**
  * @swagger
- * /comments/{postId}:
+ * /comments/{id}:
  *   get:
- *     summary: 게시물 아이디로 해당하는 댓글 검색
+ *     summary: 아이디로 해당하는 댓글 검색
  *     parameters:
  *       - in: path
- *         name: 게시물 아이디
+ *         name: id
  *         schema:
  *           type: integer
  *         required: true
  *     responses:
  *       200:
- *         description: 게시물 아이디에 해당하는 댓글 찾기 성공
+ *         description: 아이디에 해당하는 댓글 찾기 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 content:
+ *                   type: string
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 postId:
+ *                   type: number
+ *
  */
-router.get('/:postId', async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
   try {
-    const postId = req.params.postId;
-    const allComments = await Comment.findAll({
-      where: { postId },
-      order: [['postId', 'ASC']],
-    });
-    if (!allComments) {
-      throw new HttpException(400, '해당하는 게시물 아이디가 없습니다.');
+    const id = req.params.id;
+    const comment = await Comment.findByPk(id);
+    if (!comment) {
+      throw new HttpException(400, '해당하는 댓글이 없습니다.');
       return;
     }
-    res.status(200).send(allComments);
+    res.status(200).send(comment);
   } catch (err) {
     next(err);
   }

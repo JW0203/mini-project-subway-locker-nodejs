@@ -5,8 +5,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swaggerDef');
 const HttpException = require('./middleware/HttpException');
 
-
-if (typeof localStorage === "undefined" || localStorage === null) {
+if (typeof localStorage === 'undefined' || localStorage === null) {
   var LocalStorage = require('node-localstorage').LocalStorage;
   localStorage = new LocalStorage('./scratch');
 }
@@ -30,7 +29,6 @@ app.use(cookieParser());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/lockers', lockerRouter);
 app.use('/auth', authRouter);
-app.use('/map', mapRouter);
 app.use('/users', userRouter);
 app.use('/posts', postsRouter);
 app.use('/comments', commentsRouter);
