@@ -96,34 +96,65 @@ router.post('/', authenticateToken, async (req, res, next) => {
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: number
- *                   title:
- *                     type: string
- *                   content:
- *                     type: string
- *                   userId:
- *                     type: number
- *                   updatedAt:
- *                     type: string
- *                     format: date-time
- *                   createdAt:
- *                     type: string
- *                     format: date-time
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       title:
+ *                         type: string
+ *                       content:
+ *                         type: string
+ *                       userId:
+ *                         type: number
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                 metadata:
+ *                   type: object
+ *                   properties:
+ *                     totalPages:
+ *                       type: number
+ *                     limit:
+ *                       type: number
+ *                     offset:
+ *                       type: number
+ *                     count:
+ *                       type: number
+ *                     page:
+ *                       type: number
+ *                       example: 1
+ *                     previousNumber:
+ *                       type: number
+ *                       nullable: true
+ *                       example: null
+ *                     nextNumber:
+ *                       type: number
+ *                       nullable: true
+ *                       example: 2
+ *
  */
 router.get('/', async (req, res, next) => {
   try {
-    const page = req.query.page;
+    const page = Number(req.query.page);
     const limit = Number(req.query.limit) || 5;
-
-    if (page === '0') {
-      throw new HttpException(400, `page는 1부터 시작합니다.`);
+    if (!Number.isInteger(page)) {
+      throw new HttpException(400, 'page 값은 정수를 입력해주세요.');
       return;
     }
+
+    if (!Number.isInteger(limit)) {
+      throw new HttpException(400, 'limit 값은 정수를 입력해주세요.');
+      return;
+    }
+
     const offset = limit * (page - 1);
 
     const { count, rows } = await Post.findAndCountAll({
@@ -134,6 +165,12 @@ router.get('/', async (req, res, next) => {
       limit,
       offset,
     });
+
+    const totalPages = Math.ceil(count / limit);
+    if (page < 1 || page > totalPages) {
+      throw new HttpException(400, `page 범위는 1부터 ${totalPages} 입니다.`);
+      return;
+    }
 
     if (rows.length === 0) {
       throw new HttpException(400, `page ${page}에 데이터가 없습니다.`);
@@ -148,7 +185,43 @@ router.get('/', async (req, res, next) => {
       limit,
       offset,
     });
-    res.status(200).send(posts);
+
+    const items = [];
+    for (let i = 0; i < posts.length; i++) {
+      items.push(posts[i].dataValues);
+    }
+
+    // let nextPage = (page+1< totalPages)? page +1 : null;
+    let nextPage;
+    if (page + 1 < totalPages) {
+      nextPage = page + 1;
+    } else {
+      nextPage = null;
+    }
+
+    let previousPage;
+    if (page - 1 > 0) {
+      previousPage = page - 1;
+    } else {
+      previousPage = null;
+    }
+
+    const metadata = {
+      totalPages,
+      limit,
+      offset,
+      count,
+      previousPage,
+      page,
+      nextPage,
+    };
+
+    const paginationInfo = {
+      items,
+      metadata,
+    };
+
+    res.status(200).send(paginationInfo);
   } catch (err) {
     next(err);
   }
