@@ -5,15 +5,7 @@ const router = express.Router();
 const fetch = require('node-fetch');
 const HttpException = require('../middleware/HttpException');
 const authenticateToken = require('../middleware/authenticateToken');
-
-async function checkWeather(station) {
-  const appId = process.env.WEATHER_API_KEY;
-  const lati = station.latitude;
-  const longi = station.longitude;
-  const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lati}&lon=${longi}&appid=${appId}&lang=kr&units=metric`;
-  const response = await fetch(apiUrl);
-  return await response.json();
-}
+const { checkWeather } = require('../functions/weatherApi');
 
 /**
  * @swagger
@@ -219,7 +211,7 @@ router.get('/:id', authenticateToken, async (req, res, next) => {
     const lockerInfo = [];
     for (let i = 0; i < lockers.length; i++) {
       if (lockers[i].dataValues.userId === userId) {
-        lockers[i].dataValues.status = 'my locker';
+        lockers[i].dataValues.isMyLocker = true;
       }
       lockerInfo.push(lockers[i].dataValues);
     }
