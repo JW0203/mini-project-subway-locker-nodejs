@@ -12,17 +12,9 @@ if (typeof localStorage === 'undefined' || localStorage === null) {
 
 const app = express();
 const port = 3000;
-const {
-  mapRouter,
-  lockerRouter,
-  authRouter,
-  userRouter,
-  postsRouter,
-  commentsRouter,
-  stationsRouter,
-} = require('./routes');
+const { lockerRouter, authRouter, userRouter, postsRouter, commentsRouter, stationsRouter } = require('./routes');
 
-//sequelize.sync({ force: true });
+sequelize.sync({ alter: true });
 app.use(express.json());
 app.use(cookieParser());
 
