@@ -45,12 +45,15 @@ const sequelize = require('../config/database');
 router.post('/', async (req, res, next) => {
   try {
     const { postId, content } = req.body;
+
+    if (!postId) {
+      throw new HttpException(400, '게시물 아이디: ${postId} 는 없습니다.');
+      return;
+    }
+
     const validPost = await Post.findByPk(postId);
+
     if (!validPost) {
-      if (!postId) {
-        throw new HttpException(400, `게시물 아이디: ${postId}`);
-        return;
-      }
       throw new HttpException(400, '해당 포스트가 없습니다.');
       return;
     }
@@ -117,7 +120,7 @@ router.get('/', async (req, res, next) => {
     const offset = limit * (page - 1);
     const { count, rows } = await Comment.findAndCountAll({
       order: [
-        ['id', 'DESC'],
+        ['id', 'ASC'],
         ['createdAt', 'DESC'],
       ],
       limit,
@@ -125,7 +128,7 @@ router.get('/', async (req, res, next) => {
     });
 
     if (rows.length === 0) {
-      throw new HttpException(400, 'page ${page}에 데이터가 없습니다.');
+      throw new HttpException(400, `page ${page}에 데이터가 없습니다.`);
       return;
     }
     const allComments = await Comment.findAll({
@@ -210,8 +213,8 @@ router.get('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const validId = await Comment.findByPk(id);
-    if (!validId) {
+    const comment = await Comment.findByPk(id);
+    if (!comment) {
       throw new HttpException(400, '존재하지 않는 댓글입니다.');
       return;
     }
