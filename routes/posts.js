@@ -4,6 +4,7 @@ const router = express.Router();
 const { Post, User, Comment } = require('../models');
 const HttpException = require('../middleware/HttpException');
 const authenticateToken = require('../middleware/authenticateToken');
+const { pagination } = require('../functions');
 
 /**
  * @swagger
@@ -145,6 +146,12 @@ router.get('/', async (req, res, next) => {
   try {
     const page = Number(req.query.page);
     const limit = Number(req.query.limit) || 5;
+
+    if (!page || !limit) {
+      throw new HttpException(400, '값을 입력해주세요.');
+      return;
+    }
+
     if (!Number.isInteger(page)) {
       throw new HttpException(400, 'page 값은 정수를 입력해주세요.');
       return;
@@ -155,25 +162,10 @@ router.get('/', async (req, res, next) => {
       return;
     }
 
-    const offset = limit * (page - 1);
+    const { offset, totalPages, count } = await pagination(page, limit);
 
-    const { count, rows } = await Post.findAndCountAll({
-      order: [
-        ['id', 'DESC'],
-        ['createdAt', 'DESC'],
-      ],
-      limit,
-      offset,
-    });
-
-    const totalPages = Math.ceil(count / limit);
     if (page < 1 || page > totalPages) {
       throw new HttpException(400, `page 범위는 1부터 ${totalPages} 입니다.`);
-      return;
-    }
-
-    if (rows.length === 0) {
-      throw new HttpException(400, `page ${page}에 데이터가 없습니다.`);
       return;
     }
 
