@@ -3,7 +3,7 @@ const User = require('./User');
 const Station = require('./Station');
 const Post = require('./Post');
 const Comment = require('./Comment');
-const BlackList = require('./BlackList')
+const BlackList = require('./BlackList');
 
 // posts and comment
 Post.hasMany(Comment, { foreignKey: 'postId' });
@@ -17,11 +17,15 @@ Locker.belongsTo(Station, { foreignKey: 'stationId' });
 User.hasMany(Locker, { foreignKey: 'userId' });
 Locker.belongsTo(User, { foreignKey: 'userId' });
 
+//user and post
+User.hasMany(Post, { foreignKey: 'userId' });
+Post.belongsTo(User, { foreignKey: 'userId' });
+
 module.exports = {
   Locker,
   User,
   Station,
   Post,
   Comment,
-  BlackList
+  BlackList,
 };

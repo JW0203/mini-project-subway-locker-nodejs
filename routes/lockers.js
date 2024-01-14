@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const authenticateToken = require('../middleware/authenticateToken');
-
+const LockerStatus = require('../models/enums/LockerStatus');
 /**
  * @swagger
  * /lockers:
@@ -17,9 +17,9 @@ const authenticateToken = require('../middleware/authenticateToken');
  *         application/json:
  *           schema:
  *             properties:
- *               name:
+ *               stationName:
  *                 type: string
- *               n:
+ *               numberLockers:
  *                 type: number
  *     responses:
  *       201:
@@ -59,9 +59,9 @@ const authenticateToken = require('../middleware/authenticateToken');
 
 router.post('/', async (req, res, next) => {
   try {
-    const { name, n } = req.body;
+    const { stationName, numberLockers } = req.body;
     const station = await Station.findOne({
-      where: { name },
+      where: { name: stationName },
     });
     if (!station) {
       throw new HttpException(400, '해당하는 역은 등록되어 있지 않습니다.'); // 오류
@@ -71,7 +71,7 @@ router.post('/', async (req, res, next) => {
     let newLockers = [];
     await sequelize.transaction(async () => {
       const stationId = station.id;
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < numberLockers; i++) {
         const newLocker = await Locker.create({
           stationId,
         });
@@ -166,7 +166,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const foundLocker = await Locker.findByPk(id);
 
     if (!foundLocker) {
@@ -230,12 +230,12 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
       return;
     }
 
-    if (idValidation.status === 'occupied') {
+    if (idValidation.status === LockerStatus.OCCUPIED) {
       throw new HttpException(400, '선택하신 사물함은 다른 회원이 사용중 입니다.');
       return;
     }
 
-    if (idValidation.status === 'under management') {
+    if (idValidation.status === LockerStatus.UNDER_MANAGEMENT) {
       throw new HttpException(400, '선택하신 사물함은 관리중 입니다.');
       return;
     }
@@ -254,7 +254,7 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
       {
         userId,
         startDate,
-        status: 'occupied',
+        status: LockerStatus.OCCUPIED,
       },
       { where: { id } },
     );
@@ -332,11 +332,13 @@ router.patch('/end-use', async (req, res, next) => {
       where: { id },
       attributes: { exclude: ['createdAt', 'updatedAt'] },
     });
+
     const dateStart = new Date(updatedLocker['startDate']);
     const dateEnd = new Date(endDate);
     const diffMSec = dateEnd.getTime() - dateStart.getTime();
     const diffHour = Math.round(diffMSec / (60 * 1000));
     const totalUsedTime = `사용한 시간은 ${diffHour}분 입니다.`;
+
     updatedLocker.dataValues.totalUsedTime = totalUsedTime;
     res.status(200).send(updatedLocker);
   } catch (err) {
@@ -415,7 +417,7 @@ router.patch('/reset', async (req, res, next) => {
         userId: null,
         startDate: null,
         endDate: null,
-        status: 'unoccupied',
+        status: LockerStatus.UNOCCUPIED,
       },
       { where: { id } },
     );

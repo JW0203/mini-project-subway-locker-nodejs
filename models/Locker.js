@@ -1,9 +1,6 @@
 const sequelize = require('../config/database');
 const { DataTypes } = require('sequelize');
-
-// id를 pk 값으로 하고 역명과 락커를 관계를 맺어주면??
-// locker 를 만들면 자동으로 생기는것
-// poster 와 comments 처럼
+const LockerStatus = require('./enums/LockerStatus');
 
 const Locker = sequelize.define(
   'lockers',
@@ -22,8 +19,12 @@ const Locker = sequelize.define(
       allowNull: true,
     },
     status: {
-      type: DataTypes.STRING,
-      defaultValue: 'unoccupied',
+      type: DataTypes.ENUM(Object.values(LockerStatus)),
+      defaultValue: LockerStatus.UNOCCUPIED,
+    },
+    isMyLocker: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   { underscored: true },
