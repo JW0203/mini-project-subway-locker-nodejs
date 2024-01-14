@@ -177,8 +177,6 @@ router.post('/sign-in', async (req, res, next) => {
         expiryDate,
       });
 
-      localStorage.setItem('access_token', accessToken);
-
       res.status(201).send(accessToken);
     });
   } catch (err) {
@@ -208,13 +206,9 @@ router.post('/sign-in', async (req, res, next) => {
  */
 
 router.delete('/sign-out', authenticateToken, async (req, res, next) => {
-  const id = req.user.id;
-  const user = await User.findByPk(id);
-  const userEmail = user.email;
-  const accessToken = localStorage.getItem('access_token');
+  const accessToken = req.token;
 
   await BlackList.destroy({ where: { accessToken } });
-  localStorage.removeItem('access_token');
 
   res.status(204).send();
 });
