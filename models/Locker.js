@@ -10,11 +10,11 @@ const Locker = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    startDate: {
+    startDateTime: {
       type: DataTypes.DATE,
       allowNull: true,
     },
-    endDate: {
+    endDateTime: {
       type: DataTypes.DATE,
       allowNull: true,
     },

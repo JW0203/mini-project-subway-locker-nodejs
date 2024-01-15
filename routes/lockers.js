@@ -5,6 +5,7 @@ const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const authenticateToken = require('../middleware/authenticateToken');
 const LockerStatus = require('../models/enums/LockerStatus');
+
 /**
  * @swagger
  * /lockers:
@@ -249,11 +250,11 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
     if (userId === idValidation.userId) {
       throw new HttpException(400, '선택하신 사물함은 회원님이 이미 사용중입니다.');
     }
-    const startDate = Date.now();
+    const startDateTime = Date.now();
     await Locker.update(
       {
         userId,
-        startDate,
+        startDateTime,
         status: LockerStatus.OCCUPIED,
       },
       { where: { id } },
@@ -308,39 +309,77 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
  *                   example: "총 사용한 시간은 30분 입니다."
  *
  */
-router.patch('/end-use', async (req, res, next) => {
+router.patch('/end-use', authenticateToken, async (req, res, next) => {
   try {
-    const { id } = req.body;
-    const idValidation = await Locker.findByPk(id);
-    if (!idValidation) {
+    const { id, endDateTime, payment } = req.body;
+    const user = req.user;
+
+    if (!id || !endDateTime || !payment) {
+      throw new HttpException(400, '모든 정보를 body에 입력해주세요');
+      return;
+    }
+
+    if (typeof Number(id) !== 'number') {
+      throw new HttpException(400, 'id 값은 숫자를 입력해주세요요');
+      return;
+    }
+
+    if (isNaN(new Date(endDateTime)) === true) {
+      throw new HttpException(400, '다음과 같은 형식으로 날짜와 시간을 입력해주세요. YY-MM-DD HH:MM:SS');
+      return;
+    }
+
+    const locker = await Locker.findByPk(id);
+    if (!locker) {
       throw new HttpException(400, `락커 ${id}는 없습니다.`);
       return;
     }
 
-    if (!idValidation.userId) {
+    if (locker.userId !== user.id) {
+      throw new HttpException(400, '해당 유저가 사용하고 있는 락커가 아닙니다.');
+      return;
+    }
+    if (locker.status === LockerStatus.UNOCCUPIED) {
       throw new HttpException(400, '비어 있는 락커 입니다.');
       return;
     }
-    const endDate = Date.now();
-    await Locker.update(
-      {
-        endDate,
-      },
-      { where: { id } },
-    );
-    const updatedLocker = await Locker.findOne({
-      where: { id },
-      attributes: { exclude: ['createdAt', 'updatedAt'] },
+
+    if (payment === false) {
+      throw new HttpException(400, '결제 여부를 다시 확인해 주세요');
+      return;
+    }
+    await sequelize.transaction(async () => {
+      await Locker.update(
+        {
+          endDateTime,
+        },
+        { where: { id } },
+      );
+      const updatedLocker = await Locker.findOne({
+        where: { id },
+      });
+      await updatedLocker.update(
+        {
+          startDateTime: null,
+          endDateTime: null,
+          status: LockerStatus.UNOCCUPIED,
+          userId: null,
+        },
+        { where: { id } },
+      );
+
+      const resetedLocker = await Locker.findOne({
+        where: { id },
+        attributes: { exclude: ['createdAt', 'updatedAt'] },
+      });
+
+      // const dateStart = new Date(Locker.dataValues.startDateTime);
+      // const dateEnd = new Date(endDateTime);
+      // const diffMSec = dateEnd.getTime() - dateStart.getTime();
+      // const totalUsedTime = Math.round(diffMSec / 1000 / 60);
+
+      res.status(200).send(resetedLocker);
     });
-
-    const dateStart = new Date(updatedLocker['startDate']);
-    const dateEnd = new Date(endDate);
-    const diffMSec = dateEnd.getTime() - dateStart.getTime();
-    const diffHour = Math.round(diffMSec / (60 * 1000));
-    const totalUsedTime = `사용한 시간은 ${diffHour}분 입니다.`;
-
-    updatedLocker.dataValues.totalUsedTime = totalUsedTime;
-    res.status(200).send(updatedLocker);
   } catch (err) {
     next(err);
   }
