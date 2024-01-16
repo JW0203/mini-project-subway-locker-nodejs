@@ -170,10 +170,7 @@ router.get('/', async (req, res, next) => {
     }
 
     const posts = await Post.findAll({
-      order: [
-        ['id', 'DESC'],
-        ['createdAt', 'DESC'],
-      ],
+      order: [['createdAt', 'DESC']],
       limit,
       offset,
     });

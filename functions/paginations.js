@@ -3,10 +3,7 @@ const { Post } = require('../models');
 async function pagination(page, limit) {
   const offset = limit * (page - 1);
   const { count, rows } = await Post.findAndCountAll({
-    order: [
-      ['id', 'DESC'],
-      ['createdAt', 'DESC'],
-    ],
+    order: [['createdAt', 'DESC']],
     limit,
     offset,
   });

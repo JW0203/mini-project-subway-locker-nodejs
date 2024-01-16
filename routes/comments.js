@@ -119,10 +119,7 @@ router.get('/', async (req, res, next) => {
     }
     const offset = limit * (page - 1);
     const { count, rows } = await Comment.findAndCountAll({
-      order: [
-        ['id', 'ASC'],
-        ['createdAt', 'DESC'],
-      ],
+      order: [['createdAt', 'DESC']],
       limit,
       offset,
     });
@@ -132,10 +129,7 @@ router.get('/', async (req, res, next) => {
       return;
     }
     const allComments = await Comment.findAll({
-      order: [
-        ['postId', 'ASC'],
-        ['createdAt', 'DESC'],
-      ],
+      order: [['createdAt', 'DESC']],
       limit,
       offset,
     });
