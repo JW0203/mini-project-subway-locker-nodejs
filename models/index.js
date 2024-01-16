@@ -4,6 +4,7 @@ const Station = require('./Station');
 const Post = require('./Post');
 const Comment = require('./Comment');
 const BlackList = require('./BlackList');
+const Admin = require('./Admin');
 
 // posts and comment
 Post.hasMany(Comment, { foreignKey: 'postId' });
@@ -28,4 +29,5 @@ module.exports = {
   Post,
   Comment,
   BlackList,
+  Admin,
 };

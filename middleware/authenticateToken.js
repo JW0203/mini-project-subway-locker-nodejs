@@ -4,6 +4,8 @@ const HttpException = require('./HttpException');
 const authenticateToken = (req, res, next) => {
   const autherHeader = req.headers.authorization;
   const token = autherHeader && autherHeader.split(' ')[1];
+  const authortyHeader = req.headers.authority;
+  const authority = authortyHeader && authortyHeader.split(' ')[1];
 
   if (!token) {
     throw new HttpException(400, 'Header에 JWT 토큰을 넣어야 합니다.');
@@ -20,6 +22,8 @@ const authenticateToken = (req, res, next) => {
       throw new HttpException(400, '잘못된 토큰입니다.');
       return;
     }
+    user['token'] = token;
+    user['authority'] = authority;
     req.user = user;
     req.token = token;
     next();

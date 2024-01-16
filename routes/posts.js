@@ -3,7 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { Post, User, Comment } = require('../models');
 const HttpException = require('../middleware/HttpException');
-const authenticateToken = require('../middleware/authenticateToken');
+const { authenticateToken, authorityConfirmation } = require('../middleware');
+const UserAuthority = require('../models/enums/UserAuthority');
 const { pagination } = require('../functions');
 
 /**
@@ -49,7 +50,7 @@ const { pagination } = require('../functions');
  *
  */
 
-router.post('/', authenticateToken, async (req, res, next) => {
+router.post('/', authenticateToken, authorityConfirmation(UserAuthority.USER), async (req, res, next) => {
   try {
     const { title, content } = req.body;
     const id = req.user.id;
