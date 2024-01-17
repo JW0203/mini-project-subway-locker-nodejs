@@ -187,12 +187,13 @@ router.get('/', async (req, res, next) => {
  *                         type: number
  *
  */
-router.get('/:id', authenticateToken, async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const userId = req.user.id;
+
     const station = await Station.findOne({
       where: { id },
+      attributes: { exclude: ['updatedAt', 'createdAt'] },
     });
 
     if (!station) {
@@ -201,22 +202,22 @@ router.get('/:id', authenticateToken, async (req, res, next) => {
     }
 
     const weatherData = await checkWeather(station);
-    station.dataValues.temperature = weatherData.main.temp;
-    station.dataValues.humidity = weatherData.main.humidity;
-
     const lockers = await Locker.findAll({
       where: { stationId: id },
+      attributes: { exclude: ['updatedAt', 'createdAt'] },
     });
 
     const lockerInfo = [];
     for (let i = 0; i < lockers.length; i++) {
-      if (lockers[i].dataValues.userId === userId) {
-        lockers[i].dataValues.isMyLocker = true;
-      }
       lockerInfo.push(lockers[i].dataValues);
     }
-    station.dataValues.lockers = lockerInfo;
-    res.status(200).send(station);
+    const stationMetaData = {
+      station: station.dataValues,
+      lockerInfo,
+      temperature: weatherData.main.temp,
+      humidity: weatherData.main.humidity,
+    };
+    res.status(200).send(stationMetaData);
   } catch (err) {
     next(err);
   }
