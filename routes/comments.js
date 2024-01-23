@@ -3,7 +3,9 @@ const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const sequelize = require('../config/database');
-const { pagination } = require('../functions');
+const { pagination, checkRequiredParameters } = require('../functions');
+const { authenticateToken, authorityConfirmation } = require('../middleware');
+const UserAuthority = require('../models/enums/UserAuthority');
 
 /**
  * @swagger
@@ -231,6 +233,79 @@ router.delete('/:id', async (req, res, next) => {
 
     await Comment.destroy({ where: { id } });
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @swagger
+ * /comments/restore/{id}:
+ *   patch:
+ *     summary: 지운 댓글 복구
+ *     description: 관리자 권한필요, 지워진 comments id 를 이용하여 복구
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: number
+ *         required: true
+ *         description: 삭제된 comments id
+ *     responses:
+ *       201:
+ *         description: 삭제된 comment를 성공적으로 복구
+ *         content:
+ *           application.json:
+ *             schema:
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 title:
+ *                   type: string
+ *                 content:
+ *                   type: string
+ *                 userId:
+ *                   type: number
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 deletedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   default: null
+ *                 postId:
+ *                   type: number
+ *
+ */
+router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const result = checkRequiredParameters([id]);
+    if (result.validation === false) {
+      throw new HttpException(400, '복구할 comment 의 id 를 입력해주세요.');
+      return;
+    }
+
+    if (!Number(id)) {
+      throw new HttpException(400, '복구할 comment 의 id 는 숫자로 입력해주세요.');
+      return;
+    }
+
+    const comment = await Comment.findOne({ where: { id } });
+    if (comment) {
+      throw new HttpException(400, '삭제된 comment가 아닙니다.');
+      return;
+    }
+
+    await Comment.restore({ where: { id } });
+    const restoredComment = await Comment.findOne({
+      where: { id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+    });
+    res.status(200).send(restoredComment);
   } catch (err) {
     next(err);
   }

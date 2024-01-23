@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Station, Locker } = require('../models');
+const { Station, Locker, Comment } = require('../models');
 const express = require('express');
 const router = express.Router();
 const fetch = require('node-fetch');
@@ -288,15 +288,116 @@ router.delete('/:id', async (req, res, next) => {
       throw new HttpException(result.statusCode, result.message);
       return;
     }
-    const nameValidation = await Station.findOne({
+    const station = await Station.findOne({
       where: { id },
     });
-    if (!nameValidation) {
+    if (!station) {
       throw new HttpException(400, '없는 역이름 입니다.');
+      return;
     }
-    await Locker.destroy({ where: { stationId: nameValidation.id } });
+    await Locker.destroy({ where: { stationId: station.id } });
     await Station.destroy({ where: { id } });
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @swagger
+ * /stations/restore/{id}:
+ *   patch:
+ *     summary: 지운 station 과 연결된 lockers복구
+ *     description: 관리자 권한필요, 지워진 station id 를 이용하여 station 과 연결된 locker 복구
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: number
+ *         required: true
+ *         description: 삭제된 station id
+ *     responses:
+ *       201:
+ *         description: 삭제된 station locker 성공적으로 복구
+ *         content:
+ *           application.json:
+ *             schema:
+ *               properties:
+ *                 station:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                     name:
+ *                       type: string
+ *                     latitude:
+ *                       type: number
+ *                       format: float
+ *                     longitude:
+ *                       type: number
+ *                       format: float
+ *                     deletedAt:
+ *                       type: string
+ *                       default : null
+ *                 lockers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       startDate:
+ *                         type: string
+ *                         format: date-time
+ *                       endDate:
+ *                         type: string
+ *                         format: date-time
+ *                       status:
+ *                         type: string
+ *                         default: "unoccupied"
+ *                       userId:
+ *                         type: number
+ *                       stationID:
+ *                         type: number
+ *                       deletedAt:
+ *                         type: string
+ *                         default: null
+ *
+ */
+router.patch('/restore/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = checkRequiredParameters([id]);
+    if (result.validation === false) {
+      throw new HttpException(400, '복구할 station 의 id 를 입력해주세요.');
+      return;
+    }
+    if (!Number(id)) {
+      throw new HttpException(400, '복구할 station 의  id 는 숫자로 입력해주세요.');
+      return;
+    }
+    const station = await Station.findOne({ where: { id } });
+    if (station) {
+      throw new HttpException(400, '삭제된 station 이 아닙니다.');
+      return;
+    }
+
+    await Station.restore({ where: { id } });
+    await Locker.restore({ where: { stationId: id } });
+
+    const restoredStation = await Station.findOne({
+      where: { id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+    });
+    const restoredLockers = await Locker.findAll({
+      where: { stationId: id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+    });
+    const restoredStationLockers = {
+      station: restoredStation,
+      lockers: restoredLockers,
+    };
+    res.status(200).send(restoredStationLockers);
   } catch (err) {
     next(err);
   }

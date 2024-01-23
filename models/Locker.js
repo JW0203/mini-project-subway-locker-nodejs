@@ -27,7 +27,10 @@ const Locker = sequelize.define(
       defaultValue: false,
     },
   },
-  { underscored: true },
+  {
+    underscored: true,
+    paranoid: true,
+  },
 );
 
 module.exports = Locker;

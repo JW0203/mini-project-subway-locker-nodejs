@@ -3,7 +3,7 @@ const HttpException = require('./HttpException');
 function authorityConfirmation(authoriry) {
   return function (req, res, next) {
     const user = req.user;
-
+    console.log(authoriry);
     if (!user.authority) {
       throw new HttpException(400, '로그인 된 유저의 권한이 설정되어 있지 않습니다.');
       return;

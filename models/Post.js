@@ -16,7 +16,10 @@ const Post = sequelize.define(
       type: DataTypes.STRING,
     },
   },
-  { underscored: true },
+  {
+    underscored: true,
+    paranoid: true,
+  },
 );
 
 module.exports = Post;

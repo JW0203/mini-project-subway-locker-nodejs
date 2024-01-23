@@ -19,7 +19,10 @@ const Station = sequelize.define(
       type: DataTypes.FLOAT,
     },
   },
-  { underscored: true },
+  {
+    underscored: true,
+    paranoid: true,
+  },
 );
 
 module.exports = Station;

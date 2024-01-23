@@ -15,6 +15,7 @@ const Comment = sequelize.define(
   },
   {
     underscored: true,
+    paranoid: true,
   },
 );
 

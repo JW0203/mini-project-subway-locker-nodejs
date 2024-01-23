@@ -480,7 +480,7 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
 
-    const result = checkRequiredParameters([id, title, content]);
+    const result = checkRequiredParameters([id]);
     if (result.validation === false) {
       throw new HttpException(result.statusCode, result.message);
       return;
@@ -510,4 +510,80 @@ router.delete('/:id', async (req, res, next) => {
     next(err);
   }
 });
+
+/**
+ * @swagger
+ * /posts/restore/{id}:
+ *   patch:
+ *     summary: 지운 post 복구
+ *     description: 관리자 권한필요, 지워진 post id 를 이용하여 복구
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: number
+ *         required: true
+ *         description: 삭제된 post id
+ *     responses:
+ *       201:
+ *         description: 삭제된 게시물 성공적으로 복구
+ *         content:
+ *           application.json:
+ *             schema:
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 title:
+ *                   type: string
+ *                 content:
+ *                   type: string
+ *                 userId:
+ *                   type: number
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 deletedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   default: null
+ *
+ */
+router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const result = checkRequiredParameters([id]);
+    if (result.validation === false) {
+      throw new HttpException(400, '복구할 포스트의 id 를 입력해주세요.');
+      return;
+    }
+
+    if (!Number(id)) {
+      throw new HttpException(400, '복구할 포스트의 id 는 숫자로 입력해주세요.');
+      return;
+    }
+
+    const post = await Post.findOne({ where: { id } });
+    if (post) {
+      throw new HttpException(400, '삭제된 post 가 아닙니다.');
+      return;
+    }
+    await Post.restore({ where: { id } });
+    const retoredComment = await Comment.restore({ where: { postId: id } });
+    const restoredPost = await Post.findOne({ where: { id } });
+    if (!retoredComment) {
+      res.status(200).send(restoredPost);
+    } else {
+      const restoredPostComment = {
+        post: restoredPost,
+        comments: retoredComment,
+      };
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

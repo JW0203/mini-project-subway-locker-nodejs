@@ -20,7 +20,10 @@ const User = sequelize.define(
       type: DataTypes.ENUM(Object.values(UserAuthority)),
     },
   },
-  { underscored: true },
+  {
+    underscored: true,
+    paranoid: ture,
+  },
 );
 
 module.exports = User;
