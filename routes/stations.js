@@ -6,6 +6,7 @@ const fetch = require('node-fetch');
 const HttpException = require('../middleware/HttpException');
 const authenticateToken = require('../middleware/authenticateToken');
 const { checkWeather } = require('../functions/weatherApi');
+const checkRequiredParameters = require('../functions/checkRequiredParameters');
 
 /**
  * @swagger
@@ -64,10 +65,39 @@ const { checkWeather } = require('../functions/weatherApi');
 router.post('/', async (req, res, next) => {
   try {
     const { data } = req.body;
-    const newStations = [];
+
+    const result = checkRequiredParameters([data]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
+      return;
+    }
 
     for (let n in data) {
+      const keys = Object.keys(data[n]);
+      if (keys.toString !== ['name', 'latitude', 'longitude'].toString) {
+        throw new HttpException(400, 'data의 key 값이 잘 못되었습니다.');
+        return;
+      }
       const { name, latitude, longitude } = data[n];
+      if (typeof name != 'string') {
+        throw new HttpException(400, 'name은 문자로 입력해주세요.');
+        return;
+      }
+      if (typeof latitude != 'number') {
+        throw new HttpException(400, 'latitude 는 숫자로 입력해주세요.');
+      }
+      if (!(-90 < latitude && 90 > latitude)) {
+        throw new HttpException(400, 'latitude 는 -90 에서 90 사이의 값을 입력해주세요.');
+        return;
+      }
+      if (typeof longitude != 'number') {
+        throw new HttpException(400, 'longitude 는 숫자로 입력해주세요.');
+      }
+      if (!(-180 < longitude && 180 > longitude)) {
+        throw new HttpException(400, 'longitude 는 -180 에서 180 사이의 값을 입력해주세요.');
+        return;
+      }
+
       const stationDuplication = await Station.findOne({
         where: { name },
       });
@@ -77,6 +107,7 @@ router.post('/', async (req, res, next) => {
         return;
       }
 
+      const newStations = [];
       const station = await Station.create({
         name,
         latitude,
@@ -190,6 +221,15 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
+    const result = checkRequiredParameters([id]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
+      return;
+    }
+    const idIsInteger = Number.isInteger(Number(id));
+    if (!idIsInteger) {
+      throw new HttpException(400, 'id 값은 숫자로 입력해주세요');
+    }
 
     const station = await Station.findOne({
       where: { id },
@@ -225,13 +265,13 @@ router.get('/:id', async (req, res, next) => {
 
 /**
  * @swagger
- * /stations/{name}:
+ * /stations/{id}:
  *   delete:
  *     summary: 역관련 정보 삭제
  *     description : 입력된 역이름을 이용하여 해당 역과 해당 역과 연결된 라커도 같이 다 제거
  *     parameters:
  *       - in: path
- *         name: name
+ *         name: id
  *         schema:
  *           type: string
  *         required: ture
@@ -240,17 +280,22 @@ router.get('/:id', async (req, res, next) => {
  *         description : 역 삭제 성공
  *
  */
-router.delete('/:name', async (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
   try {
-    const name = req.params.name;
+    const id = req.params.id;
+    const result = checkRequiredParameters([id]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
+      return;
+    }
     const nameValidation = await Station.findOne({
-      where: { name },
+      where: { id },
     });
     if (!nameValidation) {
       throw new HttpException(400, '없는 역이름 입니다.');
     }
     await Locker.destroy({ where: { stationId: nameValidation.id } });
-    await Station.destroy({ where: { name } });
+    await Station.destroy({ where: { id } });
     res.status(204).send();
   } catch (err) {
     next(err);

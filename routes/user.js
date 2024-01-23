@@ -4,6 +4,7 @@ const authenticateToken = require('../middleware/authenticateToken');
 
 const { User, Locker } = require('../models');
 const HttpException = require('../middleware/HttpException');
+const checkRequiredParameters = require('../functions/checkRequiredParameters');
 
 /**
  * @swagger
@@ -34,7 +35,17 @@ const HttpException = require('../middleware/HttpException');
 
 router.get('/', authenticateToken, async (req, res, next) => {
   try {
-    const id = req.user.id;
+    const { id } = req.user;
+    const result = checkRequiredParameters([id]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
+      return;
+    }
+
+    if (!Number(id)) {
+      throw new HttpException(400, 'user 의 id 가 숫자가 아닙니다.');
+      return;
+    }
     const foundUser = await User.findOne({
       where: { id },
       attributes: ['id', 'email', 'createdAt'],
@@ -89,7 +100,16 @@ router.get('/', authenticateToken, async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
+    const result = checkRequiredParameters([id]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
+      return;
+    }
 
+    if (!Number(id)) {
+      throw new HttpException(400, 'user 의 id 는 숫자를 입력해주세요.');
+      return;
+    }
     const user = await User.findOne({
       where: { id },
       attributes: ['id', 'email'],

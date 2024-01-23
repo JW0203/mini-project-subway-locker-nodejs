@@ -194,7 +194,10 @@ router.post('/admin/sign-up', async (req, res, next) => {
 router.post('/sign-in', async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
+    if (!email || !password) {
+      throw new HttpException(400, 'email 과 password 를 입렵 해주세요.');
+      return;
+    }
     await sequelize.transaction(async () => {
       const user = await User.findOne({
         where: { email },

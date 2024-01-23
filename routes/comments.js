@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const sequelize = require('../config/database');
+const { pagination } = require('../functions');
 
 /**
  * @swagger
@@ -45,10 +46,8 @@ const sequelize = require('../config/database');
 router.post('/', async (req, res, next) => {
   try {
     const { postId, content } = req.body;
-
-    if (!postId) {
-      throw new HttpException(400, '게시물 아이디: ${postId} 는 없습니다.');
-      return;
+    if (!postId || !content) {
+      throw new HttpException(400, 'postId 와 content를 입력해주세요');
     }
 
     const validPost = await Post.findByPk(postId);
@@ -113,21 +112,27 @@ router.get('/', async (req, res, next) => {
   try {
     const page = req.query.page;
     const limit = Number(req.query.limit) || 5;
-    if (page === '0') {
-      throw new HttpException(400, `page는 1부터 시작합니다.`);
-      return;
-    }
-    const offset = limit * (page - 1);
-    const { count, rows } = await Comment.findAndCountAll({
-      order: [['createdAt', 'DESC']],
-      limit,
-      offset,
-    });
 
-    if (rows.length === 0) {
-      throw new HttpException(400, `page ${page}에 데이터가 없습니다.`);
+    if (!page || !limit) {
+      throw new HttpException(400, '값을 입력해주세요.');
       return;
     }
+    if (!Number.isInteger(page)) {
+      throw new HttpException(400, 'page 값은 숫자를 입력해주세요.');
+      return;
+    }
+
+    if (!Number.isInteger(limit)) {
+      throw new HttpException(400, 'limit 값은 숫자를 입력해주세요.');
+      return;
+    }
+    const { offset, totalPages, count } = await pagination(page, limit);
+
+    if (page < 1 || page > totalPages) {
+      throw new HttpException(400, `page 범위는 1부터 ${totalPages} 입니다.`);
+      return;
+    }
+
     const allComments = await Comment.findAll({
       order: [['createdAt', 'DESC']],
       limit,
@@ -175,11 +180,17 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
+    if (!id) {
+      throw new HttpException(400, '값을 입력해주세요');
+      return;
+    }
+
     const comment = await Comment.findByPk(id);
     if (!comment) {
       throw new HttpException(400, '해당하는 댓글이 없습니다.');
       return;
     }
+
     res.status(200).send(comment);
   } catch (err) {
     next(err);
@@ -207,11 +218,17 @@ router.get('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
+    if (!id) {
+      throw new HttpException(400, '값을 입력해주세요');
+      return;
+    }
+
     const comment = await Comment.findByPk(id);
     if (!comment) {
       throw new HttpException(400, '존재하지 않는 댓글입니다.');
       return;
     }
+
     await Comment.destroy({ where: { id } });
     res.status(204).send();
   } catch (err) {

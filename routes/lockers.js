@@ -5,6 +5,7 @@ const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const authenticateToken = require('../middleware/authenticateToken');
 const LockerStatus = require('../models/enums/LockerStatus');
+const { checkRequiredParameters } = require('../functions');
 
 /**
  * @swagger
@@ -61,6 +62,12 @@ const LockerStatus = require('../models/enums/LockerStatus');
 router.post('/', async (req, res, next) => {
   try {
     const { stationName, numberLockers } = req.body;
+    const result = checkRequiredParameters([stationName, numberLockers]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
+      return;
+    }
+
     const station = await Station.findOne({
       where: { name: stationName },
     });
@@ -78,7 +85,7 @@ router.post('/', async (req, res, next) => {
         });
         newLockers.push(newLocker);
       }
-      // res.status(201).send(`${n}개의 라커가 ${name}에 생성되었습니다.`);
+
       res.status(201).send(newLockers);
     });
   } catch (err) {
@@ -120,6 +127,7 @@ router.post('/', async (req, res, next) => {
  */
 router.get('/', async (req, res, next) => {
   try {
+    // apply pagination
     const allLockers = await Locker.findAll();
     res.status(200).send(allLockers);
   } catch (err) {
@@ -168,6 +176,12 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    const result = checkRequiredParameters([id]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
+      return;
+    }
     const foundLocker = await Locker.findByPk(id);
 
     if (!foundLocker) {
@@ -225,6 +239,11 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
   const { id } = req.body;
   const userId = req.user.id;
   try {
+    const result = checkRequiredParameters([id, userId]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
+      return;
+    }
     const idValidation = await Locker.findByPk(id);
     if (!idValidation) {
       throw new HttpException(400, `락커 ${id}는 없습니다. `);
@@ -314,8 +333,9 @@ router.patch('/end-use', authenticateToken, async (req, res, next) => {
     const { id, endDateTime, payment } = req.body;
     const user = req.user;
 
-    if (!id || !endDateTime || !payment) {
-      throw new HttpException(400, '모든 정보를 body에 입력해주세요');
+    const result = checkRequiredParameters([id, endDateTime, payment, user]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
       return;
     }
 
@@ -380,91 +400,6 @@ router.patch('/end-use', authenticateToken, async (req, res, next) => {
 
       res.status(200).send(resetedLocker);
     });
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * @swagger
- * /lockers/reset:
- *   patch:
- *     summary: 결제가 확인되면 사물함 초기화
- *     requestBody:
- *       description: 결제여부, 라커 id
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             properties:
- *               payment:
- *                 type: boolean
- *               id:
- *                 type: integer
- *     responses:
- *       200:
- *        description: 라커 초기화 성공
- *        content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: number
- *                 startDate:
- *                   type: string
- *                   format: date-time
- *                   nullable: true
- *                   example: null
- *                 endDate:
- *                   type: string
- *                   format: date-time
- *                   nullable: true
- *                   example: null
- *                 status:
- *                   type: string
- *                   example: "unoccupied"
- *                 stationId:
- *                   type: number
- *                 userId:
- *                   type: number
- *                   nullable: true
- *                   example: null
- */
-
-router.patch('/reset', async (req, res, next) => {
-  try {
-    const { payment, id } = req.body;
-
-    const idValidation = await Locker.findByPk(id);
-    if (!idValidation) {
-      throw new HttpException(400, `락커 ${id}는 없습니다.`);
-      return;
-    }
-
-    if (!idValidation.userId) {
-      throw new HttpException(400, '비어 있는 락커 입니다.');
-      return;
-    }
-    if (payment === false) {
-      throw new HttpException(400, `사물함 ${id}의 사용료를 결제해주세요`);
-      return;
-    }
-
-    await Locker.update(
-      {
-        userId: null,
-        startDate: null,
-        endDate: null,
-        status: LockerStatus.UNOCCUPIED,
-      },
-      { where: { id } },
-    );
-    const resetLocker = await Locker.findOne({
-      where: { id },
-      attributes: { exclude: ['createdAt', 'updatedAt'] },
-    });
-    res.status(200).send(resetLocker);
   } catch (err) {
     next(err);
   }
