@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Station, Locker, Comment } = require('../models');
+const { Station, Locker } = require('../models');
 const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');

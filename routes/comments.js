@@ -126,7 +126,7 @@ router.get('/', async (req, res, next) => {
     const limit = Number(req.query.limit) || 5;
 
     if (!page || !limit) {
-      throw new HttpException(400, '값을 입력해주세요.');
+      throw new HttpException(400, 'page 와 limit 값을 모두 입력해주세요.');
       return;
     }
     if (!Number.isInteger(page)) {

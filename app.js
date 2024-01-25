@@ -14,7 +14,7 @@ const app = express();
 const port = 3000;
 const { lockerRouter, authRouter, userRouter, postsRouter, commentsRouter, stationsRouter } = require('./routes');
 
-sequelize.sync({ alter: true });
+//sequelize.sync({ alter: true });
 // sequelize.sync({ force: true });
 app.use(express.json());
 app.use(cookieParser());

@@ -1,11 +1,11 @@
-const { Locker, Station, User } = require('../models');
+const { Locker, Station, User, Comment } = require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const { authenticateToken, authorityConfirmation } = require('../middleware');
 const { LockerStatus, UserAurhority } = require('../models/enums');
-const { checkRequiredParameters } = require('../functions');
+const { checkRequiredParameters, pagination } = require('../functions');
 const UserAuthority = require('../models/enums/UserAuthority');
 
 /**
@@ -110,9 +110,21 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
 
 /**
  * @swagger
- * /lockers:
+ * /lockers/?limit=number&page=number:
  *   get:
  *     summary: 모든 사물함 찾기
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: number
+ *         description: 페이지당 보여줄 라커의 수
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: number
+ *         description: 원하는 페이지 번호
+ *
  *     responses:
  *       200:
  *         description: 모든 사물함 찾기 성공
@@ -142,9 +154,69 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
  */
 router.get('/', async (req, res, next) => {
   try {
-    // apply pagination
-    const allLockers = await Locker.findAll();
-    res.status(200).send(allLockers);
+    const page = req.query.page;
+    const limit = Number(req.query.limit) || 5;
+    if (!page || !limit) {
+      throw new HttpException(400, 'page 와 limit 값을 모두 입력해주세요.');
+      return;
+    }
+    if (!Number.isInteger(page)) {
+      throw new HttpException(400, 'page 값은 숫자를 입력해주세요.');
+      return;
+    }
+
+    if (!Number.isInteger(limit)) {
+      throw new HttpException(400, 'limit 값은 숫자를 입력해주세요.');
+      return;
+    }
+
+    const { offset, totalPages, count } = await pagination(page, limit);
+    if (page < 1 || page > totalPages) {
+      throw new HttpException(400, `page 범위는 1부터 ${totalPages} 입니다.`);
+      return;
+    }
+
+    const lockers = await Locker.findAll({
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+
+    const items = [];
+    for (let i = 0; i < lockers.length; i++) {
+      items.push(lockers[i].dataValues);
+    }
+
+    // let nextPage = (page+1< totalPages)? page +1 : null;
+    let nextPage;
+    if (page + 1 < totalPages) {
+      nextPage = page + 1;
+    } else {
+      nextPage = null;
+    }
+
+    let previousPage;
+    if (page - 1 > 0) {
+      previousPage = page - 1;
+    } else {
+      previousPage = null;
+    }
+
+    const metadata = {
+      totalPages,
+      limit,
+      offset,
+      count,
+      previousPage,
+      page,
+      nextPage,
+    };
+
+    const paginationInfo = {
+      items,
+      metadata,
+    };
+    res.status(200).send(paginationInfo);
   } catch (err) {
     next();
   }
