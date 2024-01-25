@@ -24,31 +24,39 @@ function emailValidation(email) {
   if (!emailDomain.match(emailDomainPattern)) {
     return { validation: false, statusCode: 400, message: '입력한 이메일의 도메인 부분을 다시 확인 해주세요.' };
   }
+  return { validation: true };
+}
+
+function passwordValidation(password) {
+  if (password.length < PASSWORD_LENGTH_MIN || password.length > PASSWORD_LENGTH_MAX) {
+    return { validation: false, statusCode: 400, message: '비밀번호는 8자리이상 15이하여야 합니다.' };
+  }
+
+  if (password.match(emptySpace)) {
+    return { validation: false, statusCode: 400, message: '비밀번호에 공백이 있습니다.' };
+  }
+  return { validation: true };
 }
 async function signUpEmailPasswordValidation(email, password) {
-  const emailDomain = email.split('@')[1];
-
   const emailDuplicationCheck = await User.findOne({ where: { email } });
   if (emailDuplicationCheck) {
-    return { statusCode: 400, message: '입력하신 이메일은 이미 사용 중입니다.' };
+    return { validation: false, statusCode: 400, message: '입력하신 이메일은 이미 사용 중입니다.' };
   }
 
   const emailResult = emailValidation(email);
   if (emailResult.validation === false) {
-    return { statusCode: emailResult.statusCode, message: emailResult.message };
+    return emailResult;
+  }
+  const passwordResult = passwordValidation(password);
+  if (passwordResult.validation === false) {
+    return passwordResult;
   }
 
-  if (password.length < PASSWORD_LENGTH_MIN || password.length > PASSWORD_LENGTH_MAX) {
-    return { statusCode: 400, message: '비밀번호는 8자리이상 15이하여야 합니다.' };
-  }
-
-  if (password.match(emptySpace)) {
-    return { statusCode: 400, message: '비밀번호에 공백이 있습니다.' };
-  }
-  return 'valid';
+  return { validation: true };
 }
 
 module.exports = {
   signUpEmailPasswordValidation,
   emailValidation,
+  passwordValidation,
 };

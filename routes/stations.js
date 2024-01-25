@@ -2,35 +2,38 @@ require('dotenv').config();
 const { Station, Locker, Comment } = require('../models');
 const express = require('express');
 const router = express.Router();
-const fetch = require('node-fetch');
 const HttpException = require('../middleware/HttpException');
-const authenticateToken = require('../middleware/authenticateToken');
-const { checkWeather } = require('../functions/weatherApi');
-const checkRequiredParameters = require('../functions/checkRequiredParameters');
+const { authenticateToken, authorityConfirmation } = require('../middleware');
+const { checkWeather } = require('../functions');
+const { UserAuthority } = require('../models/enums');
 
 /**
  * @swagger
  * /stations:
  *   post:
  *     summary: 역 추가
+ *
  *     requestBody:
  *       description: 역 추가를 위한 이름, 좌표 값 필요, array 형식으로 입력 가능
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             properties:
- *               name:
- *                 type: string
- *                 example: "서울역"
- *               latitude:
- *                 type: number
- *                 format: float
- *                 example: 37.5283169
- *               longitude:
- *                 type: number
- *                 format: float
- *                 example: 126.9294254
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: "서울역"
+ *                 latitude:
+ *                   type: number
+ *                   format: float
+ *                   example: 37.528
+ *                 longitude:
+ *                   type: number
+ *                   format: float
+ *                   example: 126.9294
  *     responses:
  *       201:
  *         description: 역 추가 성공
@@ -58,26 +61,35 @@ const checkRequiredParameters = require('../functions/checkRequiredParameters');
  *                 updatedAt:
  *                   type: string
  *                   format: date-time
- *
- *
- *
  */
-router.post('/', async (req, res, next) => {
+router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
   try {
     const { data } = req.body;
+    const newStations = [];
+    const requiredKeys = ['name', 'latitude', 'longitude'];
 
-    const result = checkRequiredParameters([data]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    if (!data) {
+      throw new HttpException(400, '역을 추가하기 위한 데이터(역명, 경도, 위도) 를 입력해주세요.');
       return;
     }
 
     for (let n in data) {
-      const keys = Object.keys(data[n]);
-      if (keys.toString !== ['name', 'latitude', 'longitude'].toString) {
+      const item = data[n];
+      if (Object.keys(item).length === 0) {
+        throw new HttpException(400, '입력한 데이터가 비어 있습니다.');
+        return;
+      }
+      if (typeof item !== 'object' || item === null) {
+        throw new HttpException(400, '입력한 데이터의 속성은 objects 이여야 합니다.');
+        return;
+      }
+
+      const itemKeys = Object.keys(item);
+      if (!requiredKeys.every((key) => itemKeys.includes(key)) || itemKeys.length !== requiredKeys.length) {
         throw new HttpException(400, 'data의 key 값이 잘 못되었습니다.');
         return;
       }
+
       const { name, latitude, longitude } = data[n];
       if (typeof name != 'string') {
         throw new HttpException(400, 'name은 문자로 입력해주세요.');
@@ -107,7 +119,6 @@ router.post('/', async (req, res, next) => {
         return;
       }
 
-      const newStations = [];
       const station = await Station.create({
         name,
         latitude,
@@ -221,14 +232,15 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const id = req.params.id;
-    const result = checkRequiredParameters([id]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+
+    if (!id) {
+      throw new HttpException(400, 'id 값을 입력해주세요.');
       return;
     }
-    const idIsInteger = Number.isInteger(Number(id));
-    if (!idIsInteger) {
+
+    if (!Number.isInteger(id)) {
       throw new HttpException(400, 'id 값은 숫자로 입력해주세요');
+      return;
     }
 
     const station = await Station.findOne({
@@ -280,16 +292,17 @@ router.get('/:id', async (req, res, next) => {
  *         description : 역 삭제 성공
  *
  */
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
   try {
     const id = req.params.id;
-    const result = checkRequiredParameters([id]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+
+    if (!id) {
+      throw new HttpException(400, 'id 값을 입력해주세요.');
       return;
     }
     const station = await Station.findOne({
       where: { id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
     });
     if (!station) {
       throw new HttpException(400, '없는 역이름 입니다.');
@@ -364,7 +377,7 @@ router.delete('/:id', async (req, res, next) => {
  *                         default: null
  *
  */
-router.patch('/restore/:id', async (req, res, next) => {
+router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = checkRequiredParameters([id]);
@@ -372,7 +385,7 @@ router.patch('/restore/:id', async (req, res, next) => {
       throw new HttpException(400, '복구할 station 의 id 를 입력해주세요.');
       return;
     }
-    if (!Number(id)) {
+    if (!Number.isInteger(id)) {
       throw new HttpException(400, '복구할 station 의  id 는 숫자로 입력해주세요.');
       return;
     }

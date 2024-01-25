@@ -5,6 +5,8 @@ const authenticateToken = require('../middleware/authenticateToken');
 const { User, Locker, Station } = require('../models');
 const HttpException = require('../middleware/HttpException');
 const checkRequiredParameters = require('../functions/checkRequiredParameters');
+const { authorityConfirmation } = require('../middleware');
+const { UserAuthority } = require('../models/enums');
 
 /**
  * @swagger
@@ -33,7 +35,7 @@ const checkRequiredParameters = require('../functions/checkRequiredParameters');
  *
  */
 
-router.get('/', authenticateToken, async (req, res, next) => {
+router.get('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
   try {
     const { id } = req.user;
     const result = checkRequiredParameters([id]);
@@ -42,7 +44,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
       return;
     }
 
-    if (!Number(id)) {
+    if (!Number.isInteger(id)) {
       throw new HttpException(400, 'user 의 id 가 숫자가 아닙니다.');
       return;
     }
@@ -79,6 +81,9 @@ router.get('/', authenticateToken, async (req, res, next) => {
  *                 email:
  *                   type: string
  *                   format: email
+ *                 authority:
+ *                   type : string
+ *                   enum: [user, admin]
  *                 locker:
  *                   type: array
  *                   items:
@@ -97,16 +102,15 @@ router.get('/', authenticateToken, async (req, res, next) => {
  *                       userId:
  *                         type: number
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', authenticateToken, authorityConfirmation(UserAuthority.USER), async (req, res, next) => {
   try {
     const id = req.params.id;
-    const result = checkRequiredParameters([id]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    if (!id) {
+      throw new HttpException(400, 'id 값을 입력해주세요.');
       return;
     }
 
-    if (!Number(id)) {
+    if (!Number.isInteger(id)) {
       throw new HttpException(400, 'user 의 id 는 숫자를 입력해주세요.');
       return;
     }
@@ -114,16 +118,15 @@ router.get('/:id', async (req, res, next) => {
       where: { id },
       attributes: ['id', 'email'],
     });
+    if (!user) {
+      throw new HttpException(400, '없는 유저 입니다.');
+      return;
+    }
 
     const userLocker = await Locker.findAll({
       where: { userId: id },
       attributes: ['id', 'startDate', 'status', 'stationId', 'userId'],
     });
-
-    if (!user) {
-      throw new HttpException(400, '없는 유저 입니다.');
-      return;
-    }
 
     let userLockerInfo = [];
     if (userLocker) {
@@ -156,7 +159,7 @@ router.get('/:id', async (req, res, next) => {
  *
  */
 
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', authenticateToken, authorityConfirmation(UserAuthority.BOTH), async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = checkRequiredParameters([id]);
@@ -165,7 +168,7 @@ router.delete('/:id', async (req, res, next) => {
       throw new HttpException(400, '삭제할 user 의 id 를 적어주세요.');
       return;
     }
-    if (!Number(id)) {
+    if (!Number.isInteger(id)) {
       throw new HttpException(400, 'user id 는 숫자로 입력해주세요.');
       return;
     }
@@ -181,37 +184,41 @@ router.delete('/:id', async (req, res, next) => {
  * @swagger
  * /users/{id}:
  *   patch:
- *     summary: 해당 유저 정보 복구
- *     description: 삭제된 유저의 id 를 이용하여 정보 복구
- *     parameters
+ *     summary: 지운 user 복구
+ *     description: 관리자 권한필요, 지워진 user id 를 이용하여 복구
+ *     parameters:
  *       - in: path
  *         name: id
  *         schema:
  *           type: number
- *         required: ture
- *         description : 삭제된 유저 id
+ *         required: true
+ *         description: 삭제된 user id
  *     responses:
- *       200:
- *         description: 복구 성공
+ *       201:
+ *         description: 삭제된 user 성공적으로 복구
  *         content:
- *           application/json:
+ *           application.json:
  *             schema:
- *                type: array
- *                items:
- *                  type: object
- *                  properties:
- *                    id:
- *                      type: number
- *                    email:
- *                      type: string
- *                      format: email
- *                    createdAt:
- *                      type: string
- *                      format: date-time
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 deletedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   default: null
  *
  */
 
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = checkRequiredParameters([id]);
@@ -219,7 +226,7 @@ router.patch('/:id', async (req, res, next) => {
       throw new HttpException(400, '복구할 user 의 id 를 입력해주세요.');
       return;
     }
-    if (!Number(id)) {
+    if (!Number.isInteger(id)) {
       throw new HttpException(400, '복구할 user 의  id 는 숫자로 입력해주세요.');
       return;
     }

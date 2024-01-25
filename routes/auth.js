@@ -6,9 +6,10 @@ const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const authenticateToken = require('../middleware/authenticateToken');
-const UserAuthority = require('../models/enums/UserAuthority');
-const { signUpEmailPasswordValidation } = require('../functions');
+const { authenticateToken, authorityConfirmation } = require('../middleware');
+const { UserAuthority } = require('../models/enums');
+const { signUpEmailPasswordValidation, checkRequiredParameters } = require('../functions');
+
 /**
  * @swagger
  * /auth/sign-up:
@@ -48,14 +49,15 @@ const { signUpEmailPasswordValidation } = require('../functions');
 router.post('/sign-up', async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      throw new HttpException(400, 'email 과 password 둘다 입력해주세요.');
+    const result = checkRequiredParameters([email, password]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
       return;
     }
 
     await sequelize.transaction(async () => {
       const result = await signUpEmailPasswordValidation(email, password);
-      if (result.statusCode === 400) {
+      if (result.validation === false) {
         throw new HttpException(result.statusCode, result.message);
       }
 
@@ -127,14 +129,15 @@ router.post('/admin/sign-up', async (req, res, next) => {
       return;
     }
     const { email, password } = req.body;
-    if (!email || !password) {
-      throw new HttpException(400, 'email 과 password 둘다 입력해주세요.');
+    const result = checkRequiredParameters([email, password]);
+    if (result.validation === false) {
+      throw new HttpException(result.statusCode, result.message);
       return;
     }
 
     await sequelize.transaction(async () => {
       const result = await signUpEmailPasswordValidation(email, password);
-      if (result.statusCode === 400) {
+      if (result.validation === false) {
         throw new HttpException(result.statusCode, result.message);
         return;
       }
@@ -267,6 +270,10 @@ router.post('/sign-in', async (req, res, next) => {
 
 router.delete('/sign-out', authenticateToken, async (req, res, next) => {
   const accessToken = req.token;
+  if (!accessToken) {
+    throw new HttpException(401, '잘못된 접근입니다.');
+    return;
+  }
 
   await BlackList.destroy({ where: { accessToken } });
 

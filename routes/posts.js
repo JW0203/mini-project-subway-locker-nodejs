@@ -4,8 +4,8 @@ const router = express.Router();
 const { Post, User, Comment } = require('../models');
 const HttpException = require('../middleware/HttpException');
 const { authenticateToken, authorityConfirmation } = require('../middleware');
-const UserAuthority = require('../models/enums/UserAuthority');
-const { pagination, checkRequiredParameters } = require('../functions');
+const { UserAuthority } = require('../models/enums');
+const { pagination } = require('../functions');
 const { emailValidation } = require('../functions/signUpEmailPasswordValidation');
 
 /**
@@ -56,9 +56,8 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.USER), a
     const { title, content } = req.body;
     const id = req.user.id;
 
-    const result = checkRequiredParameters([title, content, id]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    if (!title || !content) {
+      throw new HttpException(400, 'title, content 를 모두 입력해주세요.');
       return;
     }
 
@@ -72,18 +71,11 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.USER), a
       return;
     }
 
-    const user = await User.findByPk(id);
-    if (!user) {
-      throw new HttpException(400, '해당하는 이메일은 등록되어 있지 않습니다.');
-      return;
-    }
-
     await sequelize.transaction(async () => {
-      const userId = user.id;
       const newPost = await Post.create({
         title,
         content,
-        userId,
+        userId: id,
       });
       res.status(201).send(newPost);
     });
@@ -165,7 +157,7 @@ router.get('/', async (req, res, next) => {
     const limit = Number(req.query.limit) || 5;
 
     if (!page || !limit) {
-      throw new HttpException(400, '값을 입력해주세요.');
+      throw new HttpException(400, 'page 와 limit 값을 모두 입력해주세요.');
       return;
     }
 
@@ -274,9 +266,8 @@ router.get('/', async (req, res, next) => {
 router.get('/user-email/:email', async (req, res, next) => {
   try {
     const email = req.params.email;
-    const result = checkRequiredParameters([email]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    if (!email) {
+      throw new HttpException(400, 'email 값을 입력해주세요.');
       return;
     }
     const emailValidationResult = emailValidation(email);
@@ -338,17 +329,15 @@ router.get('/user-email/:email', async (req, res, next) => {
  *                   type: string
  *                   format: date-time
  */
-router.get('/post-id/:id', async (req, res, next) => {
+router.get('/post-id/:id', authenticateToken, authorityConfirmation(UserAuthority.BOTH), async (req, res, next) => {
   try {
-    const id = req.params.id;
-    const result = checkRequiredParameters([id]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    const { id } = req.params;
+    if (!id) {
+      throw new HttpException(400, 'id 값을 입력해주세요.');
       return;
     }
 
-    const idIsInteger = Number.isInteger(Number(id));
-    if (idIsInteger === false) {
+    if (Number.isInteger(Number(id)) === false) {
       throw new HttpException(400, 'id 는 숫자를 입력해주세요');
       return;
     }
@@ -369,7 +358,7 @@ router.get('/post-id/:id', async (req, res, next) => {
  * /posts/{id}:
  *   patch:
  *     summary: 게시물 수정
- *     description: 게시물의 아이디를 받고 해당 게시물을 수정
+ *     description: 유저가 로그인 한 후, 게시물의 아이디를 받고 해당 게시물을 수정
  *     parameters:
  *       - in: path
  *         name: id
@@ -412,30 +401,16 @@ router.get('/post-id/:id', async (req, res, next) => {
  *
  */
 
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', authenticateToken, authorityConfirmation(UserAuthority.USER), async (req, res, next) => {
   try {
     const id = req.params.id;
     const { title, content } = req.body;
-
-    const result = checkRequiredParameters([id, title, content]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    if (!id) {
+      throw new HttpException(400, 'id 값을 입력해주세요.');
       return;
     }
-
-    if (title.replace(/ /g, '') === '') {
-      throw new HttpException('title 에 문자를 입력해주세요.');
-      return;
-    }
-
-    if (content.replace(/ /g, '') === '') {
-      throw new HttpException('content 에 내용을 입력해주세요.');
-      return;
-    }
-
-    const idIsInteger = Number.isInteger(Number(id));
-    if (idIsInteger === false) {
-      throw new HttpException(400, 'id 는 숫자를 입력해주세요');
+    if (!Number.isInteger(id)) {
+      throw new HttpException(400, 'id 값은 숫자로 입력해주세요.');
       return;
     }
 
@@ -444,13 +419,41 @@ router.patch('/:id', async (req, res, next) => {
       throw new HttpException(400, '존재하지 않는 포스트 아이디 입니다.');
       return;
     }
-    await Post.update(
-      {
-        title,
-        content,
-      },
-      { where: { id } },
-    );
+
+    if (title && title.replace(/ /g, '') === '') {
+      throw new HttpException('title 에 수정할 문자를 입력해주세요.');
+      return;
+    }
+
+    if (content && content.replace(/ /g, '') === '') {
+      throw new HttpException('content 에 내용을 입력해주세요.');
+      return;
+    }
+
+    if (title && content) {
+      await Post.update(
+        {
+          title,
+          content,
+        },
+        { where: { id } },
+      );
+    } else if (title) {
+      await Post.update(
+        {
+          title,
+        },
+        { where: { id } },
+      );
+    } else if (content) {
+      await Post.update(
+        {
+          content,
+        },
+        { where: { id } },
+      );
+    }
+
     const revisedPost = await Post.findByPk(id);
     res.status(200).send(revisedPost);
   } catch (err) {
@@ -476,28 +479,32 @@ router.patch('/:id', async (req, res, next) => {
  *
  *
  */
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', authenticateToken, authorityConfirmation(UserAuthority.BOTH), async (req, res, next) => {
   try {
-    const id = req.params.id;
-
-    const result = checkRequiredParameters([id]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    const { id } = req.params;
+    const userAuth = req.user.authority;
+    const userId = req.user.id;
+    if (!id) {
+      throw new HttpException(400, 'id 값을 입력해주세요.');
       return;
     }
-    const idIsInteger = Number.isInteger(Number(id));
-    if (idIsInteger === false) {
-      throw new HttpException(400, 'id 는 숫자를 입력해주세요');
+    if (!Number.isInteger(id)) {
+      throw new HttpException(400, 'id 값은 숫자를 입력해주세요.');
       return;
     }
 
     const post = await Post.findByPk(id);
     if (!post) {
-      throw new HttpException(400, '주어진 id값을 가지는 게시물이 없습니다.');
+      throw new HttpException(400, '주어진 id 값을 가지는 게시물이 없습니다.');
       return;
     }
 
-    const comment = Comment.findAll({
+    if (userAuth === UserAuthority.USER && post.userId !== userId) {
+      throw new HttpException(400, '해당 게시물 삭제 권한이 없습니다.');
+      return;
+    }
+
+    const comment = Comment.findOne({
       where: { postId: id },
     });
 
@@ -554,13 +561,12 @@ router.delete('/:id', async (req, res, next) => {
 router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
   const { id } = req.params;
   try {
-    const result = checkRequiredParameters([id]);
-    if (result.validation === false) {
+    if (!id) {
       throw new HttpException(400, '복구할 포스트의 id 를 입력해주세요.');
       return;
     }
 
-    if (!Number(id)) {
+    if (!Number.isInteger(id)) {
       throw new HttpException(400, '복구할 포스트의 id 는 숫자로 입력해주세요.');
       return;
     }
@@ -580,6 +586,7 @@ router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthor
         post: restoredPost,
         comments: retoredComment,
       };
+      res.status(200).send(restoredPostComment);
     }
   } catch (err) {
     next(err);

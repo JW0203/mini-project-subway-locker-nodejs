@@ -3,9 +3,10 @@ const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
-const authenticateToken = require('../middleware/authenticateToken');
-const LockerStatus = require('../models/enums/LockerStatus');
+const { authenticateToken, authorityConfirmation } = require('../middleware');
+const { LockerStatus, UserAurhority } = require('../models/enums');
 const { checkRequiredParameters } = require('../functions');
+const UserAuthority = require('../models/enums/UserAuthority');
 
 /**
  * @swagger
@@ -59,12 +60,26 @@ const { checkRequiredParameters } = require('../functions');
  *
  */
 
-router.post('/', async (req, res, next) => {
+router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
   try {
     const { stationName, numberLockers } = req.body;
-    const result = checkRequiredParameters([stationName, numberLockers]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    if (!stationName || !numberLockers) {
+      throw new HttpException(400, 'stationName 과 numberLockers 값 둘다 입력해주세요');
+      return;
+    }
+
+    if (typeof stationName !== 'string') {
+      throw new HttpException(400, 'stationName 은 문자로 입력해주세요.');
+      return;
+    }
+
+    if (stationName.replace(/ /g) === '') {
+      throw new HttpException(400, 'stationName 은 빈공간 일수 없습니다.');
+      return;
+    }
+
+    if (!Number.isInteger(numberLockers)) {
+      throw new HttpException(400, 'numberLockers 는 숫자로 입력해주세요.');
       return;
     }
 
@@ -176,14 +191,19 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-
-    const result = checkRequiredParameters([id]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    if (!id) {
+      throw new HttpException(400, 'id 값을 입력해주세요.');
       return;
     }
-    const foundLocker = await Locker.findByPk(id);
+    if (!Number.isInteger(id)) {
+      throw new HttpException(400, 'id 값은 숫자로 입력해주세요.');
+      return;
+    }
 
+    const foundLocker = await Locker.findOne({
+      where: { id },
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+    });
     if (!foundLocker) {
       throw new HttpException(400, '없는 사물함 아이디 입니다.');
       return;
@@ -197,7 +217,7 @@ router.get('/:id', async (req, res, next) => {
 
 /**
  * @swagger
- * /lockers/use:
+ * /lockers:
  *   patch:
  *     summary: 로그인한 유저가 선택한 라커 대여
  *     requestBody:
@@ -235,40 +255,41 @@ router.get('/:id', async (req, res, next) => {
  *                 userId:
  *                   type: number
  */
-router.patch('/use', authenticateToken, async (req, res, next) => {
-  const { id } = req.body;
-  const userId = req.user.id;
+router.patch('/', authenticateToken, authorityConfirmation(UserAuthority.USER), async (req, res, next) => {
   try {
-    const result = checkRequiredParameters([id, userId]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    const { id } = req.body;
+    const userId = req.user.id;
+    console.log(userId);
+
+    if (!id) {
+      throw new HttpException(400, 'id 값을 입력해주세요.');
       return;
     }
-    const idValidation = await Locker.findByPk(id);
-    if (!idValidation) {
+    if (!Number.isInteger(id)) {
+      throw new HttpException(400, 'id 값은 정수로 입력해주세요.');
+      return;
+    }
+
+    const locker = await Locker.findByPk(id);
+    if (!locker) {
       throw new HttpException(400, `락커 ${id}는 없습니다. `);
       return;
     }
 
-    if (idValidation.status === LockerStatus.OCCUPIED) {
-      throw new HttpException(400, '선택하신 사물함은 다른 회원이 사용중 입니다.');
+    if (locker.userId === userId) {
+      throw new HttpException(400, '선택하신 사물함은 이미 회원님이 사용중 입니다.');
       return;
     }
 
-    if (idValidation.status === LockerStatus.UNDER_MANAGEMENT) {
+    if (locker.status === LockerStatus.OCCUPIED) {
+      throw new HttpException(400, '선택하신 사물함은 다른 회원이 사용중 입니다.');
+      return;
+    }
+    if (locker.status === LockerStatus.UNDER_MANAGEMENT) {
       throw new HttpException(400, '선택하신 사물함은 관리중 입니다.');
       return;
     }
 
-    const userValidation = await User.findByPk(userId);
-    if (!userValidation) {
-      throw new HttpException(400, '존재하지 않는 유저입니다.');
-      return;
-    }
-
-    if (userId === idValidation.userId) {
-      throw new HttpException(400, '선택하신 사물함은 회원님이 이미 사용중입니다.');
-    }
     const startDateTime = Date.now();
     await Locker.update(
       {
@@ -288,7 +309,7 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
 
 /**
  * @swagger
- * /lockers/end-use:
+ * /lockers/return:
  *   patch:
  *     summary: 라커 사용 종료
  *     requestBody:
@@ -328,18 +349,16 @@ router.patch('/use', authenticateToken, async (req, res, next) => {
  *                   example: "총 사용한 시간은 30분 입니다."
  *
  */
-router.patch('/end-use', authenticateToken, async (req, res, next) => {
+router.patch('/return', authenticateToken, authorityConfirmation(UserAuthority.BOTH), async (req, res, next) => {
   try {
     const { id, endDateTime, payment } = req.body;
     const user = req.user;
-
-    const result = checkRequiredParameters([id, endDateTime, payment, user]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
+    if (!id || !endDateTime || !payment) {
+      throw new HttpException(400, 'id, endDateTime, payment 값을 모두 입력해주세요.');
       return;
     }
 
-    if (typeof Number(id) !== 'number') {
+    if (!Number.isInteger(id)) {
       throw new HttpException(400, 'id 값은 숫자를 입력해주세요요');
       return;
     }
@@ -351,7 +370,7 @@ router.patch('/end-use', authenticateToken, async (req, res, next) => {
 
     const locker = await Locker.findByPk(id);
     if (!locker) {
-      throw new HttpException(400, `락커 ${id}는 없습니다.`);
+      throw new HttpException(400, `락커 ${id} 는 없습니다.`);
       return;
     }
 
@@ -364,31 +383,28 @@ router.patch('/end-use', authenticateToken, async (req, res, next) => {
       return;
     }
 
-    if (payment === false) {
-      throw new HttpException(400, '결제 여부를 다시 확인해 주세요');
-      return;
-    }
     await sequelize.transaction(async () => {
       await Locker.update(
         {
           endDateTime,
-        },
-        { where: { id } },
-      );
-      const updatedLocker = await Locker.findOne({
-        where: { id },
-      });
-      await updatedLocker.update(
-        {
-          startDateTime: null,
-          endDateTime: null,
           status: LockerStatus.UNOCCUPIED,
-          userId: null,
         },
         { where: { id } },
       );
+      // const updatedLocker = await Locker.findOne({
+      //   where: { id },
+      // });
+      // await updatedLocker.update(
+      //   {
+      //     startDateTime: null,
+      //     endDateTime: null,
+      //     status: LockerStatus.UNOCCUPIED,
+      //     userId: null,
+      //   },
+      //   { where: { id } },
+      // );
 
-      const resetedLocker = await Locker.findOne({
+      const updatedLocker = await Locker.findOne({
         where: { id },
         attributes: { exclude: ['createdAt', 'updatedAt'] },
       });
@@ -398,7 +414,7 @@ router.patch('/end-use', authenticateToken, async (req, res, next) => {
       // const diffMSec = dateEnd.getTime() - dateStart.getTime();
       // const totalUsedTime = Math.round(diffMSec / 1000 / 60);
 
-      res.status(200).send(resetedLocker);
+      res.status(200).send(updatedLocker);
     });
   } catch (err) {
     next(err);

@@ -8,7 +8,7 @@ function checkRequiredParameters(parameters) {
   }
 
   if (empty > 0) {
-    return { validation: false, statusCode: 400, message: '값을 입력해 주세요' };
+    return { validation: false, statusCode: 400, message: '값을 모두 입력해 주세요' };
   } else {
     return { validation: true };
   }
