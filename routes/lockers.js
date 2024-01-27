@@ -4,9 +4,8 @@ const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const { authenticateToken, authorityConfirmation } = require('../middleware');
-const { LockerStatus, UserAurhority } = require('../models/enums');
-const { checkRequiredParameters, pagination } = require('../functions');
-const UserAuthority = require('../models/enums/UserAuthority');
+const { LockerStatus, UserAuthority } = require('../models/enums');
+const { pagination, asyncHandler } = require('../functions');
 
 /**
  * @swagger
@@ -60,27 +59,26 @@ const UserAuthority = require('../models/enums/UserAuthority');
  *
  */
 
-router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
-  try {
+router.post(
+  '/',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.ADMIN),
+  asyncHandler(async (req, res, next) => {
     const { stationName, numberLockers } = req.body;
     if (!stationName || !numberLockers) {
       throw new HttpException(400, 'stationName 과 numberLockers 값 둘다 입력해주세요');
-      return;
     }
 
     if (typeof stationName !== 'string') {
       throw new HttpException(400, 'stationName 은 문자로 입력해주세요.');
-      return;
     }
 
     if (stationName.replace(/ /g) === '') {
       throw new HttpException(400, 'stationName 은 빈공간 일수 없습니다.');
-      return;
     }
 
     if (!Number.isInteger(numberLockers)) {
       throw new HttpException(400, 'numberLockers 는 숫자로 입력해주세요.');
-      return;
     }
 
     const station = await Station.findOne({
@@ -88,7 +86,6 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
     });
     if (!station) {
       throw new HttpException(400, '해당하는 역은 등록되어 있지 않습니다.'); // 오류
-      return;
     }
 
     let newLockers = [];
@@ -103,14 +100,12 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
 
       res.status(201).send(newLockers);
     });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
- * /lockers/?limit=number&page=number:
+ * /lockers?limit=number&page=number:
  *   get:
  *     summary: 모든 사물함 찾기
  *     parameters:
@@ -152,28 +147,25 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
  *                     type: number
  *
  */
-router.get('/', async (req, res, next) => {
-  try {
-    const page = req.query.page;
+router.get(
+  '/',
+  asyncHandler(async (req, res, next) => {
+    const page = Number(req.query.page);
     const limit = Number(req.query.limit) || 5;
     if (!page || !limit) {
       throw new HttpException(400, 'page 와 limit 값을 모두 입력해주세요.');
-      return;
     }
     if (!Number.isInteger(page)) {
       throw new HttpException(400, 'page 값은 숫자를 입력해주세요.');
-      return;
     }
 
     if (!Number.isInteger(limit)) {
       throw new HttpException(400, 'limit 값은 숫자를 입력해주세요.');
-      return;
     }
 
     const { offset, totalPages, count } = await pagination(page, limit);
     if (page < 1 || page > totalPages) {
       throw new HttpException(400, `page 범위는 1부터 ${totalPages} 입니다.`);
-      return;
     }
 
     const lockers = await Locker.findAll({
@@ -217,10 +209,8 @@ router.get('/', async (req, res, next) => {
       metadata,
     };
     res.status(200).send(paginationInfo);
-  } catch (err) {
-    next();
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -260,16 +250,15 @@ router.get('/', async (req, res, next) => {
  *
  */
 
-router.get('/:id', async (req, res, next) => {
-  try {
+router.get(
+  '/:id',
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     if (!id) {
       throw new HttpException(400, 'id 값을 입력해주세요.');
-      return;
     }
     if (!Number.isInteger(id)) {
       throw new HttpException(400, 'id 값은 숫자로 입력해주세요.');
-      return;
     }
 
     const foundLocker = await Locker.findOne({
@@ -278,14 +267,11 @@ router.get('/:id', async (req, res, next) => {
     });
     if (!foundLocker) {
       throw new HttpException(400, '없는 사물함 아이디 입니다.');
-      return;
     }
 
     res.status(200).send(foundLocker);
-  } catch (err) {
-    next();
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -327,39 +313,36 @@ router.get('/:id', async (req, res, next) => {
  *                 userId:
  *                   type: number
  */
-router.patch('/', authenticateToken, authorityConfirmation(UserAuthority.USER), async (req, res, next) => {
-  try {
+router.patch(
+  '/',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.USER),
+  asyncHandler(async (req, res, next) => {
     const { id } = req.body;
     const userId = req.user.id;
     console.log(userId);
 
     if (!id) {
       throw new HttpException(400, 'id 값을 입력해주세요.');
-      return;
     }
     if (!Number.isInteger(id)) {
       throw new HttpException(400, 'id 값은 정수로 입력해주세요.');
-      return;
     }
 
     const locker = await Locker.findByPk(id);
     if (!locker) {
       throw new HttpException(400, `락커 ${id}는 없습니다. `);
-      return;
     }
 
     if (locker.userId === userId) {
       throw new HttpException(400, '선택하신 사물함은 이미 회원님이 사용중 입니다.');
-      return;
     }
 
     if (locker.status === LockerStatus.OCCUPIED) {
       throw new HttpException(400, '선택하신 사물함은 다른 회원이 사용중 입니다.');
-      return;
     }
     if (locker.status === LockerStatus.UNDER_MANAGEMENT) {
       throw new HttpException(400, '선택하신 사물함은 관리중 입니다.');
-      return;
     }
 
     const startDateTime = Date.now();
@@ -374,10 +357,8 @@ router.patch('/', authenticateToken, authorityConfirmation(UserAuthority.USER), 
 
     const useLocker = await Locker.findByPk(id);
     res.status(200).send(useLocker);
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -421,38 +402,35 @@ router.patch('/', authenticateToken, authorityConfirmation(UserAuthority.USER), 
  *                   example: "총 사용한 시간은 30분 입니다."
  *
  */
-router.patch('/return', authenticateToken, authorityConfirmation(UserAuthority.BOTH), async (req, res, next) => {
-  try {
+router.patch(
+  '/return',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.BOTH),
+  asyncHandler(async (req, res, next) => {
     const { id, endDateTime, payment } = req.body;
     const user = req.user;
     if (!id || !endDateTime || !payment) {
       throw new HttpException(400, 'id, endDateTime, payment 값을 모두 입력해주세요.');
-      return;
     }
 
     if (!Number.isInteger(id)) {
       throw new HttpException(400, 'id 값은 숫자를 입력해주세요요');
-      return;
     }
 
     if (isNaN(new Date(endDateTime)) === true) {
       throw new HttpException(400, '다음과 같은 형식으로 날짜와 시간을 입력해주세요. YY-MM-DD HH:MM:SS');
-      return;
     }
 
     const locker = await Locker.findByPk(id);
     if (!locker) {
       throw new HttpException(400, `락커 ${id} 는 없습니다.`);
-      return;
     }
 
     if (locker.userId !== user.id) {
       throw new HttpException(400, '해당 유저가 사용하고 있는 락커가 아닙니다.');
-      return;
     }
     if (locker.status === LockerStatus.UNOCCUPIED) {
       throw new HttpException(400, '비어 있는 락커 입니다.');
-      return;
     }
 
     await sequelize.transaction(async () => {
@@ -463,18 +441,6 @@ router.patch('/return', authenticateToken, authorityConfirmation(UserAuthority.B
         },
         { where: { id } },
       );
-      // const updatedLocker = await Locker.findOne({
-      //   where: { id },
-      // });
-      // await updatedLocker.update(
-      //   {
-      //     startDateTime: null,
-      //     endDateTime: null,
-      //     status: LockerStatus.UNOCCUPIED,
-      //     userId: null,
-      //   },
-      //   { where: { id } },
-      // );
 
       const updatedLocker = await Locker.findOne({
         where: { id },
@@ -488,9 +454,7 @@ router.patch('/return', authenticateToken, authorityConfirmation(UserAuthority.B
 
       res.status(200).send(updatedLocker);
     });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 module.exports = router;

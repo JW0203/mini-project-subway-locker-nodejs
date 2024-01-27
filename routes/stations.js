@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const { authenticateToken, authorityConfirmation } = require('../middleware');
-const { checkWeather } = require('../functions');
+const { checkWeather, asyncHandler } = require('../functions');
 const { UserAuthority } = require('../models/enums');
 
 /**
@@ -62,52 +62,48 @@ const { UserAuthority } = require('../models/enums');
  *                   type: string
  *                   format: date-time
  */
-router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
-  try {
+router.post(
+  '/',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.ADMIN),
+  asyncHandler(async (req, res, next) => {
     const { data } = req.body;
     const newStations = [];
     const requiredKeys = ['name', 'latitude', 'longitude'];
 
     if (!data) {
       throw new HttpException(400, '역을 추가하기 위한 데이터(역명, 경도, 위도) 를 입력해주세요.');
-      return;
     }
 
     for (let n in data) {
       const item = data[n];
       if (Object.keys(item).length === 0) {
         throw new HttpException(400, '입력한 데이터가 비어 있습니다.');
-        return;
       }
       if (typeof item !== 'object' || item === null) {
         throw new HttpException(400, '입력한 데이터의 속성은 objects 이여야 합니다.');
-        return;
       }
 
       const itemKeys = Object.keys(item);
       if (!requiredKeys.every((key) => itemKeys.includes(key)) || itemKeys.length !== requiredKeys.length) {
         throw new HttpException(400, 'data의 key 값이 잘 못되었습니다.');
-        return;
       }
 
       const { name, latitude, longitude } = data[n];
       if (typeof name != 'string') {
         throw new HttpException(400, 'name은 문자로 입력해주세요.');
-        return;
       }
       if (typeof latitude != 'number') {
         throw new HttpException(400, 'latitude 는 숫자로 입력해주세요.');
       }
       if (!(-90 < latitude && 90 > latitude)) {
         throw new HttpException(400, 'latitude 는 -90 에서 90 사이의 값을 입력해주세요.');
-        return;
       }
       if (typeof longitude != 'number') {
         throw new HttpException(400, 'longitude 는 숫자로 입력해주세요.');
       }
       if (!(-180 < longitude && 180 > longitude)) {
         throw new HttpException(400, 'longitude 는 -180 에서 180 사이의 값을 입력해주세요.');
-        return;
       }
 
       const stationDuplication = await Station.findOne({
@@ -116,7 +112,6 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
 
       if (stationDuplication) {
         throw new HttpException(400, `${name} 은 이미 저장되어 있습니다.`);
-        return;
       }
 
       const station = await Station.create({
@@ -127,10 +122,8 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
       newStations.push(station);
     }
     res.status(201).send(newStations);
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -164,14 +157,13 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
  *                     type: string
  *                     format: date-time
  */
-router.get('/', async (req, res, next) => {
-  try {
+router.get(
+  '/',
+  asyncHandler(async (req, res, next) => {
     const allStations = await Station.findAll();
     res.status(200).send(allStations);
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -229,18 +221,17 @@ router.get('/', async (req, res, next) => {
  *                         type: number
  *
  */
-router.get('/:id', async (req, res, next) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id',
+  asyncHandler(async (req, res, next) => {
+    const id = Number(req.params.id);
 
     if (!id) {
       throw new HttpException(400, 'id 값을 입력해주세요.');
-      return;
     }
 
     if (!Number.isInteger(id)) {
       throw new HttpException(400, 'id 값은 숫자로 입력해주세요');
-      return;
     }
 
     const station = await Station.findOne({
@@ -250,7 +241,6 @@ router.get('/:id', async (req, res, next) => {
 
     if (!station) {
       throw new HttpException(400, '해당하는 역은 없습니다.');
-      return;
     }
 
     const weatherData = await checkWeather(station);
@@ -270,10 +260,8 @@ router.get('/:id', async (req, res, next) => {
       humidity: weatherData.main.humidity,
     };
     res.status(200).send(stationMetaData);
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -292,13 +280,18 @@ router.get('/:id', async (req, res, next) => {
  *         description : 역 삭제 성공
  *
  */
-router.delete('/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
-  try {
-    const id = req.params.id;
+router.delete(
+  '/:id',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.ADMIN),
+  asyncHandler(async (req, res, next) => {
+    const id = Number(req.params.id);
 
     if (!id) {
       throw new HttpException(400, 'id 값을 입력해주세요.');
-      return;
+    }
+    if (!Number.isInteger(id)) {
+      throw new HttpException(400, ' id 는 숫자를 입력해주세요.');
     }
     const station = await Station.findOne({
       where: { id },
@@ -306,20 +299,17 @@ router.delete('/:id', authenticateToken, authorityConfirmation(UserAuthority.ADM
     });
     if (!station) {
       throw new HttpException(400, '없는 역이름 입니다.');
-      return;
     }
     await Locker.destroy({ where: { stationId: station.id } });
     await Station.destroy({ where: { id } });
     res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
  * /stations/restore/{id}:
- *   patch:
+ *   post:
  *     summary: 지운 station 과 연결된 lockers복구
  *     description: 관리자 권한필요, 지워진 station id 를 이용하여 station 과 연결된 locker 복구
  *     parameters:
@@ -377,22 +367,21 @@ router.delete('/:id', authenticateToken, authorityConfirmation(UserAuthority.ADM
  *                         default: null
  *
  */
-router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const result = checkRequiredParameters([id]);
-    if (result.validation === false) {
+router.post(
+  '/restore/:id',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.ADMIN),
+  asyncHandler(async (req, res, next) => {
+    const id = Number(req.params.id);
+    if (!id) {
       throw new HttpException(400, '복구할 station 의 id 를 입력해주세요.');
-      return;
     }
     if (!Number.isInteger(id)) {
-      throw new HttpException(400, '복구할 station 의  id 는 숫자로 입력해주세요.');
-      return;
+      throw new HttpException(400, '복구할 station 의 id 는 숫자로 입력해주세요.');
     }
     const station = await Station.findOne({ where: { id } });
     if (station) {
       throw new HttpException(400, '삭제된 station 이 아닙니다.');
-      return;
     }
 
     await Station.restore({ where: { id } });
@@ -411,8 +400,6 @@ router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthor
       lockers: restoredLockers,
     };
     res.status(200).send(restoredStationLockers);
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 module.exports = router;

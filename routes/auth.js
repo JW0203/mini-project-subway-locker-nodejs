@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { authenticateToken, authorityConfirmation } = require('../middleware');
 const { UserAuthority } = require('../models/enums');
-const { signUpEmailPasswordValidation, checkRequiredParameters } = require('../functions');
+const { signUpEmailPasswordValidation, asyncHandler } = require('../functions');
 
 /**
  * @swagger
@@ -46,13 +46,12 @@ const { signUpEmailPasswordValidation, checkRequiredParameters } = require('../f
  *                   default: "user"
  */
 
-router.post('/sign-up', async (req, res, next) => {
-  try {
+router.post(
+  '/sign-up',
+  asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
-    const result = checkRequiredParameters([email, password]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
-      return;
+    if (!email || !password) {
+      throw new HttpException(400, 'email 과 password 를 입력 해주세요.');
     }
 
     await sequelize.transaction(async () => {
@@ -76,10 +75,8 @@ router.post('/sign-up', async (req, res, next) => {
       });
       res.status(201).send(newUser);
     });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -118,28 +115,24 @@ router.post('/sign-up', async (req, res, next) => {
  *
  */
 
-router.post('/admin/sign-up', async (req, res, next) => {
-  try {
+router.post(
+  '/admin/sign-up',
+  asyncHandler(async (req, res, next) => {
     if (!process.env.DEFAULT_MASATER_EMAIL) {
-      throw new HttpException(400, '마스터 이메일을 입력해주세요');
-      return;
+      throw new HttpException(400, '마스터 이메일을 입력 해주세요');
     }
     if (!process.env.DEFAULT_MASTER_PASSWORD) {
-      throw new HttpException(400, '마스터 비밀번호를 입력해주세요');
-      return;
+      throw new HttpException(400, '마스터 비밀번호를 입력 해주세요');
     }
     const { email, password } = req.body;
-    const result = checkRequiredParameters([email, password]);
-    if (result.validation === false) {
-      throw new HttpException(result.statusCode, result.message);
-      return;
+    if (!email || !password) {
+      throw new HttpException(400, 'email 과 password 를 입력 해주세요.');
     }
 
     await sequelize.transaction(async () => {
       const result = await signUpEmailPasswordValidation(email, password);
       if (result.validation === false) {
         throw new HttpException(result.statusCode, result.message);
-        return;
       }
 
       const saltRounds = 10;
@@ -157,10 +150,8 @@ router.post('/admin/sign-up', async (req, res, next) => {
       });
       res.status(201).send(newAdmin);
     });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -194,12 +185,12 @@ router.post('/admin/sign-up', async (req, res, next) => {
  *
  */
 
-router.post('/sign-in', async (req, res, next) => {
-  try {
+router.post(
+  '/sign-in',
+  asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) {
-      throw new HttpException(400, 'email 과 password 를 입렵 해주세요.');
-      return;
+      throw new HttpException(400, 'email 과 password 를 입력 해주세요.');
     }
     await sequelize.transaction(async () => {
       const user = await User.findOne({
@@ -212,7 +203,6 @@ router.post('/sign-in', async (req, res, next) => {
 
       if (!user && !admin) {
         throw new HttpException(400, '입력하신 email은 없습니다.');
-        return;
       }
 
       const signIn = user || admin;
@@ -220,7 +210,6 @@ router.post('/sign-in', async (req, res, next) => {
       const passwordValidation = await bcrypt.compare(password, signIn.password);
       if (!passwordValidation) {
         throw new HttpException(400, '비밀번호가 틀렸습니다.');
-        return;
       }
 
       const accessToken = jwt.sign({ id: signIn.id }, process.env.JWT_SECRET_KEY, {
@@ -230,7 +219,6 @@ router.post('/sign-in', async (req, res, next) => {
       const tokenValidation = await BlackList.findOne({ where: { accessToken } });
       if (tokenValidation) {
         throw new HttpException(400, '토큰이 블랙리스트에 있습니다.');
-        return;
       }
 
       const ondDayTimeStamp = 24 * 60 * 60 * 1000;
@@ -242,10 +230,8 @@ router.post('/sign-in', async (req, res, next) => {
 
       res.status(201).send({ accessToken, authority: signIn.authority });
     });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -268,16 +254,19 @@ router.post('/sign-in', async (req, res, next) => {
  *         description: 로그아웃 성공 - 받은 이메일 주소와 access token 일치, local storage에 있는 access token 삭제
  */
 
-router.delete('/sign-out', authenticateToken, async (req, res, next) => {
-  const accessToken = req.token;
-  if (!accessToken) {
-    throw new HttpException(401, '잘못된 접근입니다.');
-    return;
-  }
+router.delete(
+  '/sign-out',
+  authenticateToken,
+  asyncHandler(async (req, res, next) => {
+    const accessToken = req.token;
+    if (!accessToken) {
+      throw new HttpException(401, '잘못된 접근입니다.');
+    }
 
-  await BlackList.destroy({ where: { accessToken } });
+    await BlackList.destroy({ where: { accessToken } });
 
-  res.status(204).send();
-});
+    res.status(204).send();
+  }),
+);
 
 module.exports = router;

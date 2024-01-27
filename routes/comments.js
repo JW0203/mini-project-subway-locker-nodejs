@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const HttpException = require('../middleware/HttpException');
 const sequelize = require('../config/database');
-const { pagination, checkRequiredParameters } = require('../functions');
+const { pagination, asyncHandler } = require('../functions');
 const { authenticateToken, authorityConfirmation } = require('../middleware');
 const { UserAuthority } = require('../models/enums');
 const { Op } = require('sequelize');
@@ -46,27 +46,26 @@ const { Op } = require('sequelize');
  *
  *
  */
-router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
-  try {
+router.post(
+  '/',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.ADMIN),
+  asyncHandler(async (req, res, next) => {
     const { postId, content } = req.body;
     if (!postId || !content) {
       throw new HttpException(400, 'postId 와 content를 입력해주세요');
-      return;
     }
     if (!Number.isInteger(postId)) {
       throw new HttpException(400, 'postId 는 숫자로 입력해주세요.');
-      return;
     }
     if (content.replace(/ /g, '') === '') {
       throw new HttpException(400, 'content 는 빈공간일 수 없습니다.');
-      return;
     }
 
     const post = await Post.findByPk(postId);
 
     if (!post) {
       throw new HttpException(400, '해당 포스트가 없습니다.');
-      return;
     }
 
     await sequelize.transaction(async () => {
@@ -76,10 +75,8 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
       });
       res.status(201).send(newComment);
     });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -120,29 +117,26 @@ router.post('/', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), 
  *                   postId:
  *                     type: number
  */
-router.get('/', async (req, res, next) => {
-  try {
-    const page = req.query.page;
+router.get(
+  '/',
+  asyncHandler(async (req, res, next) => {
+    const page = Number(req.query.page);
     const limit = Number(req.query.limit) || 5;
 
     if (!page || !limit) {
       throw new HttpException(400, 'page 와 limit 값을 모두 입력해주세요.');
-      return;
     }
     if (!Number.isInteger(page)) {
       throw new HttpException(400, 'page 값은 숫자를 입력해주세요.');
-      return;
     }
 
     if (!Number.isInteger(limit)) {
       throw new HttpException(400, 'limit 값은 숫자를 입력해주세요.');
-      return;
     }
 
     const { offset, totalPages, count } = await pagination(page, limit);
     if (page < 1 || page > totalPages) {
       throw new HttpException(400, `page 범위는 1부터 ${totalPages} 입니다.`);
-      return;
     }
 
     const allComments = await Comment.findAll({
@@ -151,10 +145,8 @@ router.get('/', async (req, res, next) => {
       offset,
     });
     res.status(200).send(allComments);
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -190,43 +182,42 @@ router.get('/', async (req, res, next) => {
  *                   type: number
  *
  */
-router.get('/:id', authenticateToken, authorityConfirmation(UserAuthority.BOTH), async (req, res, next) => {
-  try {
-    const { id } = req.params;
+router.get(
+  '/:id',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.BOTH),
+  asyncHandler(async (req, res, next) => {
+    const id = Number(req.params.id);
     const userAuthor = req.user.authority;
 
     if (!id) {
       throw new HttpException(400, 'comment 의 id 를 입력해주세요');
-      return;
     }
 
     if (!Number.isInteger(id)) {
       throw new HttpException(400, ' id 는 숫자를 입력해주세요.');
-      return;
     }
 
     const comment = await Comment.findByPk(id);
     if (!comment) {
       throw new HttpException(400, '해당하는 댓글이 없습니다.');
-      return;
     }
 
+    let post;
     if (userAuthor === UserAuthority.USER) {
       const userId = req.user.id;
       const postId = comment.postId;
-      const post = await Post.findOne({
+      post = await Post.findOne({
         where: { id: postId, userId },
       });
-      if (!post) {
-        throw new HttpException(401, '해당 댓글에 대한 접근 권한이 없습니다.');
-      }
+    }
+    if (userAuthor === UserAuthority.USER && !post) {
+      throw new HttpException(401, '해당 댓글에 대한 접근 권한이 없습니다.');
     }
 
     res.status(200).send(comment);
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
@@ -246,36 +237,34 @@ router.get('/:id', authenticateToken, authorityConfirmation(UserAuthority.BOTH),
  *
  *
  */
-router.delete('/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
-  try {
-    const id = req.params.id;
+router.delete(
+  '/:id',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.ADMIN),
+  asyncHandler(async (req, res, next) => {
+    const id = Number(req.params.id);
     if (!id) {
       throw new HttpException(400, 'comment 의 id 를 입력해주세요');
-      return;
     }
 
     if (!Number.isInteger(id)) {
-      throw new HttpException(400, ' id 는 숫자를 입력해주세요.');
-      return;
+      throw new HttpException(400, 'id 는 숫자를 입력해주세요.');
     }
 
     const comment = await Comment.findByPk(id);
     if (!comment) {
       throw new HttpException(400, '존재하지 않는 댓글입니다.');
-      return;
     }
 
     await Comment.destroy({ where: { id } });
     res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 /**
  * @swagger
  * /comments/restore/{id}:
- *   patch:
+ *   post:
  *     summary: 지운 댓글 복구
  *     description: 관리자 권한필요, 지워진 comments id 를 이용하여 복구
  *     parameters:
@@ -314,23 +303,23 @@ router.delete('/:id', authenticateToken, authorityConfirmation(UserAuthority.ADM
  *                   type: number
  *
  */
-router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthority.ADMIN), async (req, res, next) => {
-  const { id } = req.params;
-  try {
+router.post(
+  '/restore/:id',
+  authenticateToken,
+  authorityConfirmation(UserAuthority.ADMIN),
+  asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
     if (!id) {
       throw new HttpException(400, 'comment 의 id 를 입력해주세요');
-      return;
     }
 
     if (!Number(id)) {
       throw new HttpException(400, ' id 는 숫자를 입력해주세요.');
-      return;
     }
 
     const comment = await Comment.findOne({ where: { id } });
     if (comment) {
       throw new HttpException(400, '삭제된 comment 가 아닙니다.');
-      return;
     }
 
     await Comment.restore({ where: { id } });
@@ -339,9 +328,7 @@ router.patch('/restore/:id', authenticateToken, authorityConfirmation(UserAuthor
       attributes: { exclude: ['createdAt', 'updatedAt'] },
     });
     res.status(200).send(restoredComment);
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 module.exports = router;
