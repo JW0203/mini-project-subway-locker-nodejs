@@ -100,22 +100,45 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: number
- *                   content:
- *                     type: string
- *                   updatedAt:
- *                     type: string
- *                     format: date-time
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                   postId:
- *                     type: number
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       content:
+ *                         type: string
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       postId:
+ *                         type: number
+ *                 metadata:
+ *                   type: object
+ *                   properties:
+ *                     totalPages:
+ *                       type: number
+ *                     limit:
+ *                       type: number
+ *                     count:
+ *                       type: number
+ *                     page:
+ *                       type: number
+ *                       example: 1
+ *                     previousPage:
+ *                       type: number
+ *                       nullable: true
+ *                       example: null
+ *                     nextPage:
+ *                       type: number
+ *                       nullable: true
+ *                       example: null
  */
 router.get(
   '/',
@@ -123,28 +146,9 @@ router.get(
     const page = Number(req.query.page);
     const limit = Number(req.query.limit) || 5;
 
-    if (!page || !limit) {
-      throw new HttpException(400, 'page 와 limit 값을 모두 입력해주세요.');
-    }
-    if (!Number.isInteger(page)) {
-      throw new HttpException(400, 'page 값은 숫자를 입력해주세요.');
-    }
+    const result = await pagination(page, limit, Comment);
 
-    if (!Number.isInteger(limit)) {
-      throw new HttpException(400, 'limit 값은 숫자를 입력해주세요.');
-    }
-
-    const { offset, totalPages, count } = await pagination(page, limit);
-    if (page < 1 || page > totalPages) {
-      throw new HttpException(400, `page 범위는 1부터 ${totalPages} 입니다.`);
-    }
-
-    const allComments = await Comment.findAll({
-      order: [['createdAt', 'DESC']],
-      limit,
-      offset,
-    });
-    res.status(200).send(allComments);
+    res.status(200).send(result);
   }),
 );
 

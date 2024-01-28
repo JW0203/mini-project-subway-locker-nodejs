@@ -139,82 +139,26 @@ router.post(
  *                     page:
  *                       type: number
  *                       example: 1
- *                     previousNumber:
+ *                     previousPage:
  *                       type: number
  *                       nullable: true
  *                       example: null
- *                     nextNumber:
+ *                     nextPage:
  *                       type: number
  *                       nullable: true
  *                       example: 2
  *
  */
+
 router.get(
   '/',
   asyncHandler(async (req, res, next) => {
     const page = Number(req.query.page);
     const limit = Number(req.query.limit) || 5;
 
-    if (!page || !limit) {
-      throw new HttpException(400, 'page 와 limit 값을 모두 입력해주세요.');
-    }
+    const result = await pagination(page, limit, Post);
 
-    if (!Number.isInteger(page)) {
-      throw new HttpException(400, 'page 값은 숫자를 입력해주세요.');
-    }
-
-    if (!Number.isInteger(limit)) {
-      throw new HttpException(400, 'limit 값은 숫자를 입력해주세요.');
-    }
-
-    const { offset, totalPages, count } = await pagination(page, limit);
-
-    if (page < 1 || page > totalPages) {
-      throw new HttpException(400, `page 범위는 1부터 ${totalPages} 입니다.`);
-    }
-
-    const posts = await Post.findAll({
-      order: [['createdAt', 'DESC']],
-      limit,
-      offset,
-    });
-
-    const items = [];
-    for (let i = 0; i < posts.length; i++) {
-      items.push(posts[i].dataValues);
-    }
-
-    // let nextPage = (page+1< totalPages)? page +1 : null;
-    let nextPage;
-    if (page + 1 < totalPages) {
-      nextPage = page + 1;
-    } else {
-      nextPage = null;
-    }
-
-    let previousPage;
-    if (page - 1 > 0) {
-      previousPage = page - 1;
-    } else {
-      previousPage = null;
-    }
-
-    const metadata = {
-      totalPages,
-      limit,
-      offset,
-      count,
-      previousPage,
-      page,
-      nextPage,
-    };
-
-    const paginationInfo = {
-      items,
-      metadata,
-    };
-
-    res.status(200).send(paginationInfo);
+    res.status(200).send(result);
   }),
 );
 

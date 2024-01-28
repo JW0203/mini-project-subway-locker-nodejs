@@ -396,7 +396,7 @@ router.post(
       attributes: { exclude: ['createdAt', 'updatedAt'] },
     });
     const restoredStationLockers = {
-      station: restoredStation,
+      stations: restoredStation,
       lockers: restoredLockers,
     };
     res.status(200).send(restoredStationLockers);
