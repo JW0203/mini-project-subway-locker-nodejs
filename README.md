@@ -2,7 +2,7 @@
 [![DBMS MySQL](https://img.shields.io/badge/dbms-mysql-blue.svg)](https://www.mysql.com/)
 # Purpose of this project
 - 지하철에 있는 보관함 사용을 위한 서비스 따라해보기 
-- Reference [또타라커](https://apps.apple.com/kr/app/t-locker-%EB%98%90%ED%83%80%EB%9D%BC%EC%BB%A4-%EC%A7%80%ED%95%98%EC%B2%A0-%EB%AC%BC%ED%92%88-%EB%B3%B4%EA%B4%80-%EC%A0%84%EB%8B%AC%ED%95%A8/id1503291383)
+- Reference : [또타라커](https://apps.apple.com/kr/app/t-locker-%EB%98%90%ED%83%80%EB%9D%BC%EC%BB%A4-%EC%A7%80%ED%95%98%EC%B2%A0-%EB%AC%BC%ED%92%88-%EB%B3%B4%EA%B4%80-%EC%A0%84%EB%8B%AC%ED%95%A8/id1503291383)
 
 
 ## Implemented functions
