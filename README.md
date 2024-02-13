@@ -54,13 +54,6 @@
 ## Front-end
 ```
 ├── css
-│   ├── my-page.css
-│   ├── style-admin.css
-│   ├── style-messageBorad.css
-│   ├── style-return-locker.css
-│   ├── style-search-locker.css
-│   ├── style-sign.css
-│   └── style.css
 ├── images
 │   └── train.png
 ├── public
