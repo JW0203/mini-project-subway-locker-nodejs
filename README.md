@@ -18,6 +18,7 @@
 
 # 프로젝트 구조
 ## 백엔드
+```
 ├── app.js
 ├── config
 ├── functions
@@ -44,7 +45,9 @@
     ├── posts.js
     ├── stations.js
     └── user.js
+```
 ## 프론트엔드
+```
 ├── css
 │   ├── my-page.css
 │   ├── style-admin.css
@@ -72,3 +75,4 @@
     ├── search-locker-script.js
     ├── sign-in-script.js
     └── sign-up-script.js
+```
