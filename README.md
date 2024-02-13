@@ -5,7 +5,7 @@
 - Reference : [또타라커](https://apps.apple.com/kr/app/t-locker-%EB%98%90%ED%83%80%EB%9D%BC%EC%BB%A4-%EC%A7%80%ED%95%98%EC%B2%A0-%EB%AC%BC%ED%92%88-%EB%B3%B4%EA%B4%80-%EC%A0%84%EB%8B%AC%ED%95%A8/id1503291383)
 
 
-## Implemented functions
+# Implemented functions
 - 맵은 [leaflet](https://leafletjs.com/) 사용히여 보관함들이 있는 역의 위치를 맵에 표시
 - 역 클릭시 역의 현재 날씨 습도 및 역에 있는 보관함의 대여가능 여부 표시
 - 사물함 대여, 반납, 관리기능 
