@@ -15,6 +15,12 @@
 - 마이 페이지 : 로그인한 유저가 빌린 사물함, 게시한 게시물과 해당하는 댓글 확인이 가능한 페이지
 - 관리자 페이지 : 게시물, 댓글, 역, 락커, 유저를 삭제, 복원, 수정이 가능한 페이지
 
+# stack
+Language: JavaScript
+Library & Framework : Node.js
+Database : MySQL
+ORM : Sequelize
+Deploy: AWS EC2
 
 # 프로젝트 구조
 ## 백엔드
