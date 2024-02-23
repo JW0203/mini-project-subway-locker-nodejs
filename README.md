@@ -6,6 +6,10 @@
 
 
 # Implemented functions
+- 맵에 역의 위치 표시
+- 역 클릭시 역의 현재 날씨, 습도, 보관함 정보 표시
+- 사물함 마다 상태를 다른 색으로 표시
+- 
 - 맵은 [leaflet](https://leafletjs.com/) 사용히여 보관함들이 있는 역의 위치를 맵에 표시
 - 역 클릭시 역의 현재 날씨 습도 및 역에 있는 보관함의 대여가능 여부 표시
 - 사물함 대여, 반납, 관리기능 
@@ -24,6 +28,7 @@
 # Project Structure
 ## Back-end
 ```
+Back-end
 ├── app.js
 ├── config
 ├── functions
@@ -53,6 +58,7 @@
 ```
 ## Front-end
 ```
+Front-end
 ├── css
 ├── images
 │   └── train.png
