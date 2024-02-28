@@ -21,6 +21,10 @@
 ### 사용자 계정 관리
 - **회원가입 / 로그인 / 로그아웃**
     - jwt 를 이용
+ 
+### 유저와 관리자 권한 구별
+- **미들웨어**를 이용한 구별
+  - authorityConfirmation.js
 
 ### 메시지 보드 (Q&A)
 - **메시지 게시 / 게시물에 답글 달기**
@@ -46,7 +50,7 @@
 - Deploy: AWS EC2
 
 # Project Structure
-## Back-end
+### Back-end
 ```
 Back-end
 ├── app.js
@@ -76,7 +80,7 @@ Back-end
     ├── stations.js
     └── user.js
 ```
-## Front-end
+### Front-end
 ```
 Front-end
 ├── css
