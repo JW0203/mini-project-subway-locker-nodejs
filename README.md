@@ -42,7 +42,7 @@
     - 관리자가 게시물, 댓글, 역, 락커, 사용자 계정을 삭제, 복원, 편집할 수 있는 기능을 제공
 
 # 데이터베이스 ERD
-![ERD 설명](ERD-subway-lockers.png)
+![ERD 설명](ERD-2.png)
 
 # Stack
 - Language: JavaScript
