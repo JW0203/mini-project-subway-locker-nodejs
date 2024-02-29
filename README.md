@@ -1,5 +1,9 @@
-[![Node.js](https://img.shields.io/badge/node.js-%2343853D.svg?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/en)
-[![DBMS MySQL](https://img.shields.io/badge/dbms-mysql-blue.svg)](https://www.mysql.com/)
+[![Nodejs](https://img.shields.io/badge/Platform-Node.js-green)](https://nodejs.org/en)
+[![express](https://img.shields.io/badge/Web_frame-express.js-white)](https://nodejs.org/en)
+[![Js](https://img.shields.io/badge/code-JavaScript-blue)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![mysql](https://img.shields.io/badge/DBMS-MySQL-orange)](https://www.mysql.com/)
+
+
 # Purpose of this project
 - 지하철에 있는 보관함 사용을 위한 서비스 따라해보기 
 - Reference : [또타라커](https://apps.apple.com/kr/app/t-locker-%EB%98%90%ED%83%80%EB%9D%BC%EC%BB%A4-%EC%A7%80%ED%95%98%EC%B2%A0-%EB%AC%BC%ED%92%88-%EB%B3%B4%EA%B4%80-%EC%A0%84%EB%8B%AC%ED%95%A8/id1503291383)
