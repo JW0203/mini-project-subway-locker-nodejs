@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="../css/style-admin.css">
+</head>
+<body>
+<header>
+  <!-- Header for admin page -->
+  <div class="menu-bar">
+    <button id="goHome">Home</button>
+  </div>
+  <h1>Administrator Dashboard</h1>
+
+</header>
+<main>
+  <!-- Section to manage users -->
+<!--  <section id="users">-->
+<!--    <h2>User Management</h2>-->
+<!--    &lt;!&ndash; User management tools here &ndash;&gt;-->
+<!--  </section>-->
+
+  <!-- Section to manage content -->
+  <section id="stations">
+    <h2>Station Management</h2>
+    <menu>
+      <!-- Station -->
+      <p>Make stations</p>
+      <form id="stationsAdd">
+        <div id="stationInputsContainer" class="input">
+            <input type="text" name="stationName" placeholder="역 이름" required />
+            <input type="number" name="stationLatitude" placeholder="위도" step="any" required />
+            <input type="number" name="stationLongitude" placeholder="경도" step="any" required />
+        </div>
+        <button type="button" id="addStation">역 추가하기</button>
+        <button type="submit" id="makeStation">전송</button>
+      </form>
+
+      <p>Revise station</p>
+      <form id="stationsRevise">
+        <div>
+          <div class="input">
+            <input type="text" name="stationId" placeholder="역 Id" required />
+            <input type="text" name="stationName" placeholder="역 이름" />
+            <input type="number" name="stationLatitude" placeholder="위도" step="any" />
+            <input type="number" name="stationLongitude" placeholder="경도" step="any" />
+          </div>
+        </div>
+        <button type="submit">전송</button>
+      </form>
+
+      <p>Delete station</p>
+      <form id="stationsDelete">
+          <div class="input">
+            <input type="text" name="stationId" placeholder="역 id" required />
+            <button type="submit" >제거</button>
+          </div>
+      </form>
+
+      <p>Restore station</p>
+      <form id="stationRestore">
+          <div class="input">
+            <input type="text" name="stationId" placeholder="역 id" required />
+            <button type="submit" >복구</button>
+          </div>
+
+      </form>
+    </menu>
+  </section>
+
+  <!-- Lockers -->
+  <section id="lockers">
+    <h2>Locker Management</h2>
+    <!-- Locker management tools here -->
+    <menu>
+      <p>Make Lockers</p>
+      <form id="makeLockers">
+          <div class="input">
+            <input type="number" name="stationId" placeholder="역 아이디" required />
+            <input type="number" name="numberLockers" placeholder="생성할 라커 개수" required />
+            <button type="submit">전송</button>
+          </div>
+      </form>
+
+      <p>Revise locker</p>
+      <form id="reviseLocker">
+          <div class="input">
+            <input type="number" name="lockerId" placeholder="라커 아이디" required />
+            <select name="lockerStatus" required>
+              <option value="">Select status</option>
+              <option value="occupied">Occupied</option>
+              <option value="unoccupied">Unoccupied</option>
+              <option value="under management">Under Management</option>
+            </select>
+            <button type="submit">전송</button>
+          </div>
+      </form>
+
+      <p>Delete locker</p>
+      <form id="deleteLocker">
+          <div class="input">
+            <input type="number" name="lockerId" placeholder="라커 아이디" required />
+            <button type="submit" >제거</button>
+          </div>
+      </form>
+
+      <p>Restore locker</p>
+      <form id="restoreLocker">
+          <div class="input">
+            <input type="number" name="lockerId" placeholder="라커 아이디" required />
+            <button type="submit">복구</button>
+          </div>
+      </form>
+
+      <p>Search locker by id</p>
+      <form id="searchLockerId">
+        <div class="input">
+          <input type="number" name="lockerId" placeholder="라커 아이디">
+          <button type= 'submit'>검색</button>
+        </div>
+        <div id="search-result"></div>
+      </form>
+      <p>Search lockers <button id=goLockerSearch>검색</button></p>
+    </menu>
+  </section>
+
+  <!-- Section for reports -->
+  <section id="Post">
+    <h2>Post Management</h2>
+    <menu>
+      <p> Delete post </p>
+      <form id="deletePost">
+          <div class="input">
+            <input type="number" name="postId" placeholder="게시물 아이디" required />
+            <button type="submit" >삭제</button>
+          </div>
+      </form>
+
+      <p>Restore Post</p>
+      <form id="restorePost">
+        <div class="input">
+          <input type="number" name="postId" placeholder="게시물 아이디" required />
+          <button type="submit" >복구</button>
+        </div>
+      </form>
+    </menu>
+    <!-- Post tools here -->
+  </section>
+
+  <section id="comments">
+    <h2>Comment Management</h2>
+    <menu>
+      Add comment
+      <form id="addComment">
+          <div class="input">
+            <input type="number" name="postId" placeholder="게시물 아이디" required />
+            <input type="text" name="commentContent" placeholder="댓글 내용" required />
+            <button type="submit">전송</button>
+          </div>
+      </form>
+
+      Revise comment
+      <form id ="reviseComment">
+          <div class="input">
+            <input type="text" name="commentId" placeholder="댓글 아이디" required />
+            <input type="text" name="commentContent" placeholder="댓글 수정 내용" required />
+            <button type="submit" >전송</button>
+          </div>
+      </form>
+
+      Delete comment
+      <form id="deleteComment">
+          <div class="input">
+            <input type="number" name="commentId" placeholder="댓글 아이디" required />
+            <button type="submit" >삭제</button>
+          </div>
+      </form>
+
+      Restore comment
+      <form id="restoreComment">
+          <div class="input">
+            <input type="number" name="commentId" placeholder="댓글 아이디" required />
+            <button type="submit">복구</button>
+          </div>
+      </form>
+
+    </menu>
+
+    <!-- Comment tools here -->
+  </section>
+  <section id="user">
+    <h2>User Management</h2>
+    <menu>
+
+      <p>Delete user</p>
+      <form id="deleteUser">
+          <div class="input">
+            <input type="text" name="userId" placeholder="유저 아이디" required />
+            <button type="submit" >삭제</button>
+          </div>
+      </form>
+
+      <p>Restore user</p>
+      <form id="restoreUser">
+          <div class="input">
+            <input type="text" name="userId" placeholder="유저 아이디" required />
+            <button type="submit">복구</button>
+          </div>
+      </form>
+    </menu>
+
+  </section>
+</main>
+
+<footer>
+  <!-- Admin page footer here --><p>test mini project</p>
+</footer>
+<script src="../src/admin-script.js"></script>
+<script src="../src/button.js"></script>
+</body>
+</html>

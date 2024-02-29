@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, sans-serif;
+}
+.locker-list {
+    list-style-type: none;
+    padding: 0;
+}
+.locker-item {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 5px;
+}
+.locker-item h3 {
+    margin-top: 0;
+}
+
+.locker-button {
+    margin: 10px; /* Adjust the value as needed to increase/decrease space */
+    padding: 10px; /* Add some padding inside the buttons for better readability */
+    display: inline-block; /* This will allow you to set margins */
+    border: 1px solid #ccc; /* Just an example border */
+    background-color: #f9f9f9; /* Just an example background color */
+    cursor: pointer; /* Changes the cursor to indicate it's clickable */
+}
+
+/* This ensures that the list does not have padding and margin, which can affect the layout */
+#rentedLockers {
+    padding: 0;
+    margin: 0;
+    list-style-type: none; /* Removes bullet points from the list */
+}
+
+.post {
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.comment {
+    margin-left: 20px;
+    margin-top: 10px;
+    font-size: 0.9em;
+}

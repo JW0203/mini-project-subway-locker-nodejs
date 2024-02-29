@@ -1,10 +1,9 @@
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const sequelize = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swaggerDef');
 const HttpException = require('./middleware/HttpException');
-
+const cors = require('cors');
 // if (typeof localStorage === 'undefined' || localStorage === null) {
 //   var LocalStorage = require('node-localstorage').LocalStorage;
 //   localStorage = new LocalStorage('./scratch');
@@ -14,10 +13,10 @@ const app = express();
 const port = 3000;
 const { lockerRouter, authRouter, userRouter, postsRouter, commentsRouter, stationsRouter } = require('./routes');
 
-//sequelize.sync({ alter: true });
+sequelize.sync({ alter: true });
 // sequelize.sync({ force: true });
 app.use(express.json());
-app.use(cookieParser());
+app.use(cors());
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/lockers', lockerRouter);

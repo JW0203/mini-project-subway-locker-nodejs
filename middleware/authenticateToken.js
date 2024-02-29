@@ -1,11 +1,9 @@
 const jwt = require('jsonwebtoken');
 const HttpException = require('./HttpException');
-const UserAuthority = require('../models/enums/UserAuthority');
 
 const authenticateToken = (req, res, next) => {
   const autherHeader = req.headers.authorization;
   const token = autherHeader && autherHeader.split(' ')[1];
-  const authority = req.headers.authority;
 
   if (!token) {
     throw new HttpException(400, 'Header에 JWT 토큰을 넣어야 합니다.');
@@ -16,16 +14,14 @@ const authenticateToken = (req, res, next) => {
     if (err) {
       console.log(err.message);
       if (err.message === 'jwt expired') {
-        throw new HttpException(400, '토큰 기한이 만료되었습니다.');
+        throw new HttpException(401, '토큰 기한이 만료되었습니다.');
         return;
       }
-      throw new HttpException(400, '잘못된 토큰입니다.');
+      throw new HttpException(401, '잘못된 토큰입니다.');
       return;
     }
-    user['token'] = token;
-    user['authority'] = authority;
+
     req.user = user;
-    req.token = token;
     next();
   });
 };

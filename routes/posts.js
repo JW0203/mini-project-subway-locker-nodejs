@@ -2,11 +2,10 @@ const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
 const { Post, User, Comment } = require('../models');
-const HttpException = require('../middleware/HttpException');
-const { authenticateToken, authorityConfirmation } = require('../middleware');
+const { authenticateToken, authorityConfirmation, HttpException } = require('../middleware');
 const { UserAuthority } = require('../models/enums');
 const { pagination, asyncHandler } = require('../functions');
-const { emailValidation } = require('../functions/signUpEmailPasswordValidation');
+const { emailValidation } = require('../functions');
 
 /**
  * @swagger
@@ -54,8 +53,8 @@ const { emailValidation } = require('../functions/signUpEmailPasswordValidation'
 router.post(
   '/',
   authenticateToken,
-  authorityConfirmation(UserAuthority.USER),
-  asyncHandler(async (req, res, next) => {
+  authorityConfirmation([UserAuthority.USER]),
+  asyncHandler(async (req, res) => {
     const { title, content } = req.body;
     const id = req.user.id;
 
@@ -64,11 +63,11 @@ router.post(
     }
 
     if (title.replace(/ /g, '') === '') {
-      throw new HttpException('title 에 문자를 입력해주세요.');
+      throw new HttpException(400, 'title 에 문자를 입력해주세요.');
     }
 
     if (content.replace(/ /g, '') === '') {
-      throw new HttpException('content 에 문자를 입력해주세요.');
+      throw new HttpException(400, 'content 에 문자를 입력해주세요.');
     }
 
     await sequelize.transaction(async () => {
@@ -84,7 +83,7 @@ router.post(
 
 /**
  * @swagger
- * /posts/?limit=number&page=number:
+ * /posts?limit=number&page=number:
  *   get:
  *     summary: 찾은 모든 게시물을 페이지네이션
  *     parameters:
@@ -152,7 +151,7 @@ router.post(
 
 router.get(
   '/',
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const page = Number(req.query.page);
     const limit = Number(req.query.limit) || 5;
 
@@ -202,14 +201,14 @@ router.get(
  */
 router.get(
   '/user-email/:email',
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const email = req.params.email;
     if (!email) {
       throw new HttpException(400, 'email 값을 입력해주세요.');
     }
-    const emailValidationResult = emailValidation(email);
-    if (emailValidationResult.validation === false) {
-      throw new HttpException(emailValidationResult.statusCode, emailValidationResult.message);
+    const isEmailValidation = emailValidation(email);
+    if (!isEmailValidation.validation) {
+      throw new HttpException(isEmailValidation.statusCode, isEmailValidation.message);
     }
     const user = await User.findOne({
       where: { email },
@@ -230,16 +229,10 @@ router.get(
 
 /**
  * @swagger
- * /posts/post-id/{id}:
+ * /posts/user-posts:
  *   get:
- *     summary: 게시물 아이디를 이용한 게시물 검색
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: number
- *         required: true
- *         description: 게시물 아이디
+ *     summary: 로그인한 유저의 게시물을 모두 검색
+ *     description: 로그인한 유저의 id 를 이용하여 게시물 검색
  *     responses:
  *       200:
  *         description: 게시물 검색 성공
@@ -263,22 +256,26 @@ router.get(
  *                   format: date-time
  */
 router.get(
-  '/post-id/:id',
+  '/user-posts',
   authenticateToken,
-  authorityConfirmation(UserAuthority.BOTH),
-  asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) {
-      throw new HttpException(400, 'id 값을 입력해주세요.');
+  authorityConfirmation([UserAuthority.USER]),
+  asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+
+    if (!userId) {
+      throw new HttpException(400, 'userId 값을 입력해주세요.');
     }
 
-    if (Number.isInteger(Number(id)) === false) {
-      throw new HttpException(400, 'id 는 숫자를 입력해주세요');
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new HttpException(400, '유효한 userId 를 숫자로 입력해주세요.');
     }
 
-    const foundPosts = await Post.findByPk(id);
+    const foundPosts = await Post.findAll({
+      where: { userId },
+      order: [['createdAt', 'DESC']],
+    });
     if (!foundPosts) {
-      throw new HttpException(400, '해당하는 게시물이 없습니다.');
+      throw new HttpException(404, '해당하는 게시물이 없습니다.');
     }
     res.status(200).send(foundPosts);
   }),
@@ -335,55 +332,41 @@ router.get(
 router.patch(
   '/:id',
   authenticateToken,
-  authorityConfirmation(UserAuthority.USER),
-  asyncHandler(async (req, res, next) => {
-    const id = Number(req.params.id);
+  authorityConfirmation([UserAuthority.USER]),
+  asyncHandler(async (req, res) => {
+    const postId = Number(req.params.id);
     const { title, content } = req.body;
-    if (!id) {
+    if (!postId) {
       throw new HttpException(400, 'id 값을 입력해주세요.');
     }
-    if (!Number.isInteger(id)) {
-      throw new HttpException(400, 'id 값은 숫자로 입력해주세요.');
+    if (!Number.isInteger(postId) || postId <= 0) {
+      throw new HttpException(400, '유효한 postId 를 숫자로 입력해주세요.');
     }
 
-    const postValidation = await Post.findByPk(id);
-    if (!postValidation) {
-      throw new HttpException(400, '존재하지 않는 포스트 아이디 입니다.');
+    const post = await Post.findByPk(id);
+    if (!post) {
+      throw new HttpException(404, '존재하지 않는 포스트 아이디 입니다.');
     }
 
     if (title && title.replace(/ /g, '') === '') {
-      throw new HttpException('title 에 수정할 문자를 입력해주세요.');
+      throw new HttpException(400, 'title 에 수정할 문자를 입력해주세요.');
     }
 
     if (content && content.replace(/ /g, '') === '') {
-      throw new HttpException('content 에 내용을 입력해주세요.');
+      throw new HttpException(400, 'content 에 내용을 입력해주세요.');
     }
 
-    if (title && content) {
+    await sequelize.transaction(async () => {
       await Post.update(
         {
           title,
           content,
         },
-        { where: { id } },
+        { where: { id: postId } },
       );
-    } else if (title) {
-      await Post.update(
-        {
-          title,
-        },
-        { where: { id } },
-      );
-    } else if (content) {
-      await Post.update(
-        {
-          content,
-        },
-        { where: { id } },
-      );
-    }
+    });
 
-    const revisedPost = await Post.findByPk(id);
+    const revisedPost = await Post.findByPk(postId);
     res.status(200).send(revisedPost);
   }),
 );
@@ -409,36 +392,37 @@ router.patch(
 router.delete(
   '/:id',
   authenticateToken,
-  authorityConfirmation(UserAuthority.BOTH),
-  asyncHandler(async (req, res, next) => {
-    const id = Number(req.params);
-    const userAuth = req.user.authority;
+  authorityConfirmation([UserAuthority.USER, UserAuthority.ADMIN]),
+  asyncHandler(async (req, res) => {
+    const postId = Number(req.params.id);
     const userId = req.user.id;
-    if (!id) {
+    const userAuth = req.user.authority;
+    if (!postId) {
       throw new HttpException(400, 'id 값을 입력해주세요.');
     }
-    if (!Number.isInteger(id)) {
-      throw new HttpException(400, 'id 값은 숫자를 입력해주세요.');
+    if (!Number.isInteger(postId) || postId <= 0) {
+      throw new HttpException(400, '유효한 postId 를 숫자로 입력해주세요.');
     }
 
-    const post = await Post.findByPk(id);
+    const post = await Post.findByPk(postId);
     if (!post) {
-      throw new HttpException(400, '주어진 id 값을 가지는 게시물이 없습니다.');
+      throw new HttpException(404, '주어진 id 값을 가지는 게시물이 없습니다.');
     }
 
     if (userAuth === UserAuthority.USER && post.userId !== userId) {
-      throw new HttpException(400, '해당 게시물 삭제 권한이 없습니다.');
+      throw new HttpException(403, '해당 게시물 삭제 권한이 없습니다.');
     }
 
-    const comment = Comment.findOne({
-      where: { postId: id },
+    await sequelize.transaction(async () => {
+      const comment = Comment.findOne({
+        where: { postId },
+      });
+      if (comment) {
+        await Comment.destroy({ where: { postId } });
+      }
+      await Post.destroy({ where: { id: postId } });
+      res.status(204).send();
     });
-
-    if (comment) {
-      await Comment.destroy({ where: { postId: id } });
-    }
-    await Post.destroy({ where: { id } });
-    res.status(204).send();
   }),
 );
 
@@ -485,31 +469,32 @@ router.delete(
 router.post(
   '/restore/:id',
   authenticateToken,
-  authorityConfirmation(UserAuthority.ADMIN),
-  asyncHandler(async (req, res, next) => {
-    const id = Number(req.params.id);
+  authorityConfirmation([UserAuthority.ADMIN]),
+  asyncHandler(async (req, res) => {
+    const postId = Number(req.params.id);
 
-    if (!id) {
+    if (!postId) {
       throw new HttpException(400, '복구할 포스트의 id 를 입력해주세요.');
     }
 
-    if (!Number.isInteger(id)) {
-      throw new HttpException(400, '복구할 포스트의 id 는 숫자로 입력해주세요.');
+    if (!Number.isInteger(postId) || postId <= 0) {
+      throw new HttpException(400, '유효한 postId 를 숫자로 입력해주세요.');
     }
 
-    const post = await Post.findOne({ where: { id } });
+    const post = await Post.findOne({ where: { id: postId } });
     if (post) {
-      throw new HttpException(400, '삭제된 post 가 아닙니다.');
+      throw new HttpException(422, '삭제된 post 가 아닙니다.');
     }
-    await Post.restore({ where: { id } });
-    const retoredComment = await Comment.restore({ where: { postId: id } });
-    const restoredPost = await Post.findOne({ where: { id } });
-    if (!retoredComment) {
+    await Post.restore({ where: { id: postId } });
+    const restoredComment = await Comment.restore({ where: { postId } });
+    const restoredPost = await Post.findOne({ where: { id: postId } });
+    if (!restoredComment) {
       res.status(200).send(restoredPost);
-    } else {
+    }
+    if (restoredComment) {
       const restoredPostComment = {
         post: restoredPost,
-        comments: retoredComment,
+        comments: restoredComment,
       };
       res.status(200).send(restoredPostComment);
     }

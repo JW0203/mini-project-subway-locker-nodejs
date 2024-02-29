@@ -10,18 +10,18 @@ async function pagination(page, limit, model, orderingColumn, orderingDirection,
     return;
   }
 
-  if (!Number.isInteger(page)) {
-    throw new HttpException(400, 'page 값은 숫자를 입력해주세요.');
+  if (!Number.isInteger(page) || page <= 0) {
+    throw new HttpException(400, '유효한 page 값을 숫자를 입력해주세요.');
     return;
   }
 
-  if (!Number.isInteger(limit)) {
-    throw new HttpException(400, 'limit 값은 숫자를 입력해주세요.');
+  if (!Number.isInteger(limit) || limit <= 0) {
+    throw new HttpException(400, '유효한 limit 값을 숫자를 입력해주세요.');
     return;
   }
 
   const offset = limit * (page - 1);
-  const count = model.count();
+  const count = await model.count();
 
   const totalPages = Math.ceil(count / limit);
   if (page < 1 || page > totalPages) {
@@ -46,7 +46,7 @@ async function pagination(page, limit, model, orderingColumn, orderingDirection,
   }
 
   const items = await model.findAll({
-    order: [column, direction],
+    order: [[column, direction]],
     attributes: { exclude: excludedAttributes },
     limit,
     offset,

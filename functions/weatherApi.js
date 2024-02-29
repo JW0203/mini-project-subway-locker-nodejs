@@ -1,4 +1,4 @@
-async function checkWeather(station) {
+async function weatherApi(station) {
   const appId = process.env.WEATHER_API_KEY;
   const lati = station.latitude;
   const longi = station.longitude;
@@ -7,6 +7,4 @@ async function checkWeather(station) {
   return await response.json();
 }
 
-module.exports = {
-  checkWeather,
-};
+module.exports = weatherApi;

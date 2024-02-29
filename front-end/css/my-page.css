@@ -1,0 +1,11 @@
+.post {
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.comment {
+    margin-left: 20px;
+    margin-top: 10px;
+    font-size: 0.9em;
+}

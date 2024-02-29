@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../css/style-search-locker.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <title>사물함 정보</title>
+</head>
+<body>
+
+<div class="container">
+  <div class="container">
+    <button id="goHome">Home</button>
+    <button id="goAdmin">Administer</button>
+  </div>
+  <h1>사물함 정보</h1>
+  <form id="lockerForm">
+    <label for="limit">페이지당 사물함 수:</label>
+    <input type="number" id="limit" name="limit" min="1" value="5">
+    <label for="page">페이지 번호:</label>
+    <input type="number" id="page" name="page" min="1" value="1">
+    <button type="submit">검색</button>
+  </form>
+  <div id="lockerInfo"></div>
+  <div id="pagination"></div>
+</div>
+<script src="../src/search-locker-script.js"></script>
+<script src="../src/button.js"></script>
+</body>
+</html>

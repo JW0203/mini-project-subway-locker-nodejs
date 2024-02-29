@@ -22,6 +22,10 @@ Locker.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(Post, { foreignKey: 'userId' });
 Post.belongsTo(User, { foreignKey: 'userId' });
 
+// admin and comment
+Admin.hasMany(Comment, { foreignKey: 'adminId' });
+Comment.belongsTo(Admin, { foreignKey: 'adminId' });
+
 module.exports = {
   Locker,
   User,

@@ -1,59 +1,88 @@
 const express = require('express');
 const router = express.Router();
-const authenticateToken = require('../middleware/authenticateToken');
-
+const { authenticateToken, authorityConfirmation, HttpException } = require('../middleware');
 const { User, Locker, Station } = require('../models');
-const HttpException = require('../middleware/HttpException');
 const { asyncHandler } = require('../functions');
-const { authorityConfirmation } = require('../middleware');
 const { UserAuthority } = require('../models/enums');
 
 /**
  * @swagger
- * /users:
+ * /users/mine:
  *   get:
- *     summary: 모든 유저 정보 조회
- *     description: 모든 유저의 pk 값과 이메일 정보를 조회
+ *     summary: 로그인 중인 유저가 사물함 정보 조회
  *     responses:
  *       200:
  *         description: 조회 성공
  *         content:
  *           application/json:
  *             schema:
- *                type: array
- *                items:
- *                  type: object
- *                  properties:
- *                    id:
- *                      type: number
- *                    email:
- *                      type: string
- *                      format: email
- *                    createdAt:
- *                      type: string
- *                      format: date-time
- *
+ *               properties:
+ *                 id:
+ *                   type: number
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                 authority:
+ *                   type : string
+ *                   enum: [user, admin]
+ *                 locker:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       startDateTime:
+ *                         type: string
+ *                         format: date-time
+ *                       statusTime:
+ *                         type: string
+ *                         default: "occupied"
+ *                       stationId:
+ *                         type: number
+ *                       userId:
+ *                         type: number
  */
-
 router.get(
-  '/',
+  '/mine',
   authenticateToken,
-  authorityConfirmation(UserAuthority.ADMIN),
-  asyncHandler(async (req, res, next) => {
-    const id = req.user;
-
-    if (!id) {
+  authorityConfirmation([UserAuthority.USER]),
+  asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    if (!userId) {
       throw new HttpException(400, 'id 값을 입력해주세요.');
     }
 
-    if (!Number.isInteger(id)) {
-      throw new HttpException(400, 'user 의 id 가 숫자가 아닙니다.');
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new HttpException(400, '유효한 user id 를 숫자로 입력해주세요.');
     }
-    const foundUser = await User.findOne({
-      where: { id },
-      attributes: ['id', 'email', 'createdAt'],
+    const user = await User.findOne({
+      where: { id: userId },
+      attributes: ['id', 'email'],
     });
-    res.status(200).send(foundUser);
+    if (!user) {
+      throw new HttpException(404, '없는 유저 입니다.');
+    }
+
+    const userLocker = await Locker.findAll({
+      where: { userId },
+      attributes: ['id', 'startDateTime', 'status', 'stationId', 'userId'],
+    });
+
+    let userLockerInfo = [];
+    if (userLocker) {
+      for (let i = 0; i < userLocker.length; i++) {
+        let stationId = userLocker[i].dataValues.stationId;
+        const station = await Station.findOne({ where: { id: stationId } });
+        const stationName = station.dataValues.name;
+        const data = {
+          ...userLocker[i].dataValues,
+          stationName,
+        };
+        userLockerInfo.push(data);
+      }
+    }
+    res.status(200).send(userLockerInfo);
   }),
 );
 
@@ -90,7 +119,7 @@ router.get(
  *                     properties:
  *                       id:
  *                         type: number
- *                       startDate:
+ *                       startDateTime:
  *                         type: string
  *                         format: date-time
  *                       status:
@@ -104,33 +133,33 @@ router.get(
 router.get(
   '/:id',
   authenticateToken,
-  authorityConfirmation(UserAuthority.USER),
-  asyncHandler(async (req, res, next) => {
-    const id = Number(req.params.id);
-    if (!id) {
-      throw new HttpException(400, 'id 값을 입력해주세요.');
+  authorityConfirmation([UserAuthority.ADMIN]),
+  asyncHandler(async (req, res) => {
+    const userId = Number(req.params.id);
+    if (!userId) {
+      throw new HttpException(400, '유저의 id 값을 입력해주세요.');
     }
 
-    if (!Number.isInteger(id)) {
-      throw new HttpException(400, 'user 의 id 는 숫자를 입력해주세요.');
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new HttpException(400, '유효한 유저의 id 를 숫자로 입력해주세요.');
     }
     const user = await User.findOne({
-      where: { id },
+      where: { id: userId },
       attributes: ['id', 'email'],
     });
     if (!user) {
-      throw new HttpException(400, '없는 유저 입니다.');
+      throw new HttpException(404, '없는 유저 입니다.');
     }
 
-    const userLocker = await Locker.findAll({
-      where: { userId: id },
-      attributes: ['id', 'startDate', 'status', 'stationId', 'userId'],
+    const userLockers = await Locker.findAll({
+      where: { userId },
+      attributes: ['id', 'startDateTime', 'status', 'stationId', 'userId'],
     });
 
     let userLockerInfo = [];
-    if (userLocker) {
-      for (let i = 0; i < userLocker.length; i++) {
-        userLockerInfo.push(userLocker[i].dataValues);
+    if (userLockers) {
+      for (const userLocker of userLockers) {
+        userLockerInfo.push(userLocker.dataValues);
       }
       user.dataValues.locker = userLockerInfo;
     }
@@ -157,19 +186,35 @@ router.get(
  */
 
 router.delete(
-  '/:id',
+  '/:id?',
   authenticateToken,
-  authorityConfirmation(UserAuthority.BOTH),
-  asyncHandler(async (req, res, next) => {
-    const id = Number(req.params.id);
-    if (!id) {
-      throw new HttpException(400, '삭제할 user 의 id 를 적어주세요.');
-    }
-    if (!Number.isInteger(id)) {
-      throw new HttpException(400, 'user id 는 숫자로 입력해주세요.');
+  authorityConfirmation([UserAuthority.ADMIN, UserAuthority.USER]),
+  asyncHandler(async (req, res) => {
+    const { user } = req;
+    // delete own account
+    if (user.authority === UserAuthority.USER) {
+      const id = Number(user.id);
+      await User.destroy({ where: { id } });
+      res.status(204).send();
     }
 
-    await User.destroy({ where: { id } });
+    // admin
+    if (user.authority !== UserAuthority.ADMIN) {
+      throw new HttpException(403, '권한이 없습니다.');
+    }
+    const userId = Number(req.params.id);
+    if (!userId) {
+      throw new HttpException(400, '삭제할 user 의 id 를 적어주세요.');
+    }
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new HttpException(400, '유효한 user id를 숫자로 입력해주세요.');
+    }
+
+    const deleteUser = await User.findOne({ where: { id: userId } });
+    if (!deleteUser) {
+      throw new HttpException(404, '삭제할 user 가 없습니다.');
+    }
+    await User.destroy({ where: { id: userId } });
     res.status(204).send();
   }),
 );
@@ -215,23 +260,23 @@ router.delete(
 router.post(
   '/:id',
   authenticateToken,
-  authorityConfirmation(UserAuthority.ADMIN),
-  asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!id) {
+  authorityConfirmation([UserAuthority.ADMIN]),
+  asyncHandler(async (req, res) => {
+    const userId = Number(req.params.id);
+    if (!userId) {
       throw new HttpException(400, '복구할 user 의 id 를 입력해주세요.');
     }
-    if (!Number.isInteger(id)) {
-      throw new HttpException(400, '복구할 user 의  id 는 숫자로 입력해주세요.');
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new HttpException(400, ' 유효한 user id 를 숫자로 입력해주세요.');
     }
-    const user = await User.findOne({ where: { id } });
+    const user = await User.findOne({ where: { id: userId } });
     if (user) {
-      throw new HttpException(400, '삭제된 user 가 아닙니다.');
+      throw new HttpException(409, '삭제된 user 가 아닙니다.');
     }
 
-    await User.restore({ where: { id } });
+    await User.restore({ where: { id: userId } });
     const restoredUser = await User.findOne({
-      where: { id },
+      where: { id: userId },
       attributes: { exclude: ['createadAt', 'updatedAt', 'password'] },
     });
     res.status(201).send(restoredUser);

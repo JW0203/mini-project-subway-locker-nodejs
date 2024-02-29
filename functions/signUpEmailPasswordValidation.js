@@ -44,11 +44,11 @@ async function signUpEmailPasswordValidation(email, password) {
   }
 
   const emailResult = emailValidation(email);
-  if (emailResult.validation === false) {
+  if (!emailResult.validation) {
     return emailResult;
   }
   const passwordResult = passwordValidation(password);
-  if (passwordResult.validation === false) {
+  if (!passwordResult.validation) {
     return passwordResult;
   }
 

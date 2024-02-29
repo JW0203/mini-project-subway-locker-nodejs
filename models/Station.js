@@ -13,10 +13,10 @@ const Station = sequelize.define(
       type: DataTypes.STRING,
     },
     latitude: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(23, 20),
     },
     longitude: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(23, 20),
     },
   },
   {

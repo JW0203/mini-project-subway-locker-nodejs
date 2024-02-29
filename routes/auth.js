@@ -3,10 +3,9 @@ const { User, BlackList, Admin } = require('../models');
 const sequelize = require('../config/database');
 const express = require('express');
 const router = express.Router();
-const HttpException = require('../middleware/HttpException');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { authenticateToken, authorityConfirmation } = require('../middleware');
+const { authenticateToken, HttpException } = require('../middleware');
 const { UserAuthority } = require('../models/enums');
 const { signUpEmailPasswordValidation, asyncHandler } = require('../functions');
 
@@ -48,20 +47,19 @@ const { signUpEmailPasswordValidation, asyncHandler } = require('../functions');
 
 router.post(
   '/sign-up',
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       throw new HttpException(400, 'email 과 password 를 입력 해주세요.');
     }
 
     await sequelize.transaction(async () => {
-      const result = await signUpEmailPasswordValidation(email, password);
-      if (result.validation === false) {
-        throw new HttpException(result.statusCode, result.message);
+      const isValidEmailPassword = await signUpEmailPasswordValidation(email, password);
+      if (!isValidEmailPassword.validation) {
+        throw new HttpException(isValidEmailPassword.statusCode, isValidEmailPassword.message);
       }
 
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
 
       await User.create({
         email,
@@ -117,7 +115,7 @@ router.post(
 
 router.post(
   '/admin/sign-up',
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     if (!process.env.DEFAULT_MASATER_EMAIL) {
       throw new HttpException(400, '마스터 이메일을 입력 해주세요');
     }
@@ -130,13 +128,12 @@ router.post(
     }
 
     await sequelize.transaction(async () => {
-      const result = await signUpEmailPasswordValidation(email, password);
-      if (result.validation === false) {
-        throw new HttpException(result.statusCode, result.message);
+      const isValidEmailPassword = await signUpEmailPasswordValidation(email, password);
+      if (!isValidEmailPassword.validation) {
+        throw new HttpException(isValidEmailPassword.statusCode, isValidEmailPassword.message);
       }
 
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
 
       await Admin.create({
         email,
@@ -187,7 +184,7 @@ router.post(
 
 router.post(
   '/sign-in',
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       throw new HttpException(400, 'email 과 password 를 입력 해주세요.');
@@ -202,24 +199,27 @@ router.post(
       });
 
       if (!user && !admin) {
-        throw new HttpException(400, '입력하신 email은 없습니다.');
+        throw new HttpException(401, '입력하신 email은 없습니다.');
       }
 
       const signIn = user || admin;
 
       const passwordValidation = await bcrypt.compare(password, signIn.password);
       if (!passwordValidation) {
-        throw new HttpException(400, '비밀번호가 틀렸습니다.');
+        throw new HttpException(401, '비밀번호가 틀렸습니다.');
       }
 
-      const accessToken = jwt.sign({ id: signIn.id }, process.env.JWT_SECRET_KEY, {
-        expiresIn: '1d',
-      });
-
-      const tokenValidation = await BlackList.findOne({ where: { accessToken } });
-      if (tokenValidation) {
-        throw new HttpException(400, '토큰이 블랙리스트에 있습니다.');
-      }
+      const accessToken = jwt.sign(
+        {
+          id: signIn.id,
+          email: signIn.email,
+          authority: signIn.authority,
+        },
+        process.env.JWT_SECRET_KEY,
+        {
+          expiresIn: '1d',
+        },
+      );
 
       const ondDayTimeStamp = 24 * 60 * 60 * 1000;
       const expiryDate = Date.now() + ondDayTimeStamp;
@@ -257,12 +257,13 @@ router.post(
 router.delete(
   '/sign-out',
   authenticateToken,
-  asyncHandler(async (req, res, next) => {
-    const accessToken = req.token;
-    if (!accessToken) {
-      throw new HttpException(401, '잘못된 접근입니다.');
-    }
+  asyncHandler(async (req, res) => {
+    const autherHeader = req.headers.authorization;
+    const accessToken = autherHeader && autherHeader.split(' ')[1];
 
+    if (!accessToken) {
+      throw new HttpException(401, '토큰이 없습니다.');
+    }
     await BlackList.destroy({ where: { accessToken } });
 
     res.status(204).send();
