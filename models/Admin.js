@@ -2,8 +2,8 @@ const sequelize = require('../config/database');
 const { DataTypes } = require('sequelize');
 const UserAuthority = require('./enums/UserAuthority');
 
-const User = sequelize.define(
-  'users',
+const Admin = sequelize.define(
+  'admins',
   {
     id: {
       type: DataTypes.INTEGER,
@@ -20,10 +20,7 @@ const User = sequelize.define(
       type: DataTypes.ENUM(Object.values(UserAuthority)),
     },
   },
-  {
-    underscored: true,
-    paranoid: true,
-  },
+  { underscored: true },
 );
 
-module.exports = User;
+module.exports = Admin;

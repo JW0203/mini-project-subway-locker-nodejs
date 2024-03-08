@@ -1,16 +1,15 @@
 const lockerRouter = require('./lockers');
 const authRouter = require('./auth');
-const mapRouter = require('./map');
-const postRouter = require('./posts');
-const commentRouter = require('./comments');
 const userRouter = require('./user');
-
+const postsRouter = require('./posts');
+const commentsRouter = require('./comments');
+const stationsRouter = require('./stations');
 
 module.exports = {
-    lockerRouter,
-    authRouter,
-    mapRouter,
-    postRouter,
-    commentRouter,
-    userRouter
-}
+  lockerRouter,
+  authRouter,
+  userRouter,
+  postsRouter,
+  commentsRouter,
+  stationsRouter,
+};

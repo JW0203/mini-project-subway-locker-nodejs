@@ -1,22 +1,37 @@
 const Locker = require('./Locker');
 const User = require('./User');
 const Station = require('./Station');
-const Message = require('./Message');
+const Post = require('./Post');
 const Comment = require('./Comment');
+const BlackList = require('./BlackList');
+const Admin = require('./Admin');
 
-// user : message = 1: N
-User.hasMany(Message, {foreignKey: 'userId'});
-Message.belongsTo(User, {foreignKey: 'userId'});
+// posts and comment
+Post.hasMany(Comment, { foreignKey: 'postId' });
+Comment.belongsTo(Post, { foreignKey: 'postId' });
 
-// Message : comment = 1 : 1
-// Comment 에 message_id 라는 컬럼에 해당 Message 의 id 를 추가
-Message.hasOne(Comment, {foreignKey: 'messageId', sourceKey: 'id'});
-// Message 에 comment_id 라는 컬럼에 해당 Comment 의 id 를 추가
-Comment.hasOne(Message, {foreignKey: 'commentId', sourceKey: 'id'});
+// stations and lockers
+Station.hasMany(Locker, { foreignKey: 'stationId' });
+Locker.belongsTo(Station, { foreignKey: 'stationId' });
 
-module.exports ={
-    Locker,
-    User,
-    Station,
-    Message
-}
+//user and locker
+User.hasMany(Locker, { foreignKey: 'userId' });
+Locker.belongsTo(User, { foreignKey: 'userId' });
+
+//user and post
+User.hasMany(Post, { foreignKey: 'userId' });
+Post.belongsTo(User, { foreignKey: 'userId' });
+
+// admin and comment
+Admin.hasMany(Comment, { foreignKey: 'adminId' });
+Comment.belongsTo(Admin, { foreignKey: 'adminId' });
+
+module.exports = {
+  Locker,
+  User,
+  Station,
+  Post,
+  Comment,
+  BlackList,
+  Admin,
+};

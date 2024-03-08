@@ -1,25 +1,36 @@
 const sequelize = require('../config/database');
-const {DataTypes} = require('sequelize');
+const { DataTypes } = require('sequelize');
+const LockerStatus = require('./enums/LockerStatus');
 
-
-const Locker = sequelize.define('lockers', {
-    stationName:{
-        type: DataTypes.STRING, // 역 PK 값 저장 ? 아니면
-        primaryKey : true
+const Locker = sequelize.define(
+  'lockers',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
     },
-    lockerNumber: {
-        type: DataTypes.INTEGER
+    startDateTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
-    userInUse: {
-        type: DataTypes.INTEGER // 유저 pk 값 저장
+    endDateTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
-    startDate :{
-        type: DataTypes.DATE
+    status: {
+      type: DataTypes.ENUM(Object.values(LockerStatus)),
+      defaultValue: LockerStatus.UNOCCUPIED,
     },
-    expirationDate:{
-        type: DataTypes.DATE
-    }
-}, {underscored:true})
+    isMyLocker: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+  },
+  {
+    underscored: true,
+    paranoid: true,
+  },
+);
 
 module.exports = Locker;
-

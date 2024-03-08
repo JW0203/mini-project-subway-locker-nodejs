@@ -1,22 +1,19 @@
 const sequelize = require('../config/database');
 const { DataTypes } = require('sequelize');
 
-const Station = sequelize.define(
-  'stations',
+const Post = sequelize.define(
+  'posts',
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    title: {
       type: DataTypes.STRING,
     },
-    latitude: {
-      type: DataTypes.DECIMAL(23, 20),
-    },
-    longitude: {
-      type: DataTypes.DECIMAL(23, 20),
+    content: {
+      type: DataTypes.STRING,
     },
   },
   {
@@ -25,4 +22,4 @@ const Station = sequelize.define(
   },
 );
 
-module.exports = Station;
+module.exports = Post;
