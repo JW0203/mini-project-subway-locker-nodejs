@@ -262,9 +262,8 @@ router.delete(
     const accessToken = autherHeader && autherHeader.split(' ')[1];
 
     if (!accessToken) {
-      throw new HttpException(401, '토큰이 없습니다.');
+      throw new HttpException(401, '헤더에 토큰이 없습니다.');
     }
-    await BlackList.destroy({ where: { accessToken } });
 
     res.status(204).send();
   }),
