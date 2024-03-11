@@ -178,7 +178,7 @@ document.getElementById('logout').addEventListener('click', async () => {
       localStorage.removeItem('accessToken');
       alert('로그아웃 되었습니다.');
       // 로그아웃 후 홈페이지로 이동하거나 페이지 새로고침
-      window.location.href = '../public/index.html'; // 홈페이지 URL로 변경하세요
+      window.location.href = '../index.html'; // 홈페이지 URL로 변경하세요
     } else {
       // 로그아웃 실패 처리
       alert('로그아웃에 실패했습니다.');

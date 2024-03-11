@@ -1,7 +1,7 @@
 const goHome = document.getElementById('goHome');
 if (goHome) {
   goHome.addEventListener('click', function () {
-    window.location.href = '../public/index.html';
+    window.location.href = '../index.html';
   });
 }
 const goSignIn = document.getElementById('goSignIn');

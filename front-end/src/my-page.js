@@ -11,7 +11,7 @@ async function deleteAccount() {
     if (response.status === 204) {
       localStorage.removeItem('accessToken');
       alert('계정이 삭제되었습니다.');
-      window.location.href = '../public/index.html';
+      window.location.href = '../index.html';
     }
   } catch (error) {
     console.error('계정 삭제중 에러가 발생했습니다.:', error);
