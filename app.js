@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const sequelize = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
@@ -43,5 +44,5 @@ app.use((err, req, res, next) => {
   });
 });
 app.listen(port, () => {
-  console.log(`서버가 실행됩니다. http://localhost:${port}`);
+  console.log(`서버가 실행됩니다. http://${process.env.HOST_IP}:${port}`);
 });
