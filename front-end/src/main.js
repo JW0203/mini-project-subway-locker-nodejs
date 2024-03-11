@@ -1,3 +1,4 @@
+import API_ADDRESS from './config/config';
 var trainIcon = L.icon({
   iconUrl: '../images/train.png',
   iconSize: [25, 25], // Adjust the size as needed
@@ -18,7 +19,7 @@ L.svg().addTo(map);
 // Function to fetch and display stations
 async function fetchAndDisplayStations() {
   try {
-    const response = await fetch('http://localhost:3000/stations');
+    const response = await fetch(`${API_ADDRESS}/stations`);
     const contentType = response.headers.get('Content-Type');
     if (!response.ok && contentType && contentType.includes('application/json')) {
       const errData = await response.json();
@@ -44,7 +45,7 @@ async function fetchAndDisplayStations() {
 // Function to fetch station details
 async function fetchStationDetails(stationId) {
   try {
-    const response = await fetch(`http://localhost:3000/stations/${stationId}`);
+    const response = await fetch(`${API_ADDRESS}/stations/${stationId}`);
 
     const contentType = response.headers.get('Content-Type');
     if (!response.ok && contentType && contentType.includes('application/json')) {
@@ -110,7 +111,7 @@ function displayStationDetails(details) {
 async function rentLocker(id) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`http://localhost:3000/lockers/rental`, {
+    const response = await fetch(`${API_ADDRESS}/lockers/rental`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -164,7 +165,7 @@ document.getElementById('logout').addEventListener('click', async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/auth/sign-out', {
+    const response = await fetch(`${API_ADDRESS}/auth/sign-out`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

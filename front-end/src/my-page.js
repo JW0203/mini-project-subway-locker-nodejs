@@ -1,6 +1,7 @@
+import API_ADDRESS from './config/config';
 async function deleteAccount() {
   try {
-    const response = await fetch(`http://localhost:3000/users/delete/`, {
+    const response = await fetch(`${API_ADDRESS}/users/delete/`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -20,7 +21,7 @@ async function deleteAccount() {
 
 async function fetchRentedLockers() {
   try {
-    const response = await fetch(`http://localhost:3000/users/mine`, {
+    const response = await fetch(`${API_ADDRESS}/users/mine`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
@@ -94,7 +95,7 @@ async function returnLocker(lockerId) {
         endDateTime: endDateTime,
         payment: true,
       };
-      const response = await fetch('http://localhost:3000/lockers/return', {
+      const response = await fetch(`${API_ADDRESS}/lockers/return`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +130,7 @@ document.getElementById('deleteAccount').addEventListener('click', async functio
 
 async function fetchUserPosts() {
   try {
-    const response = await fetch(`http://localhost:3000/posts/user-posts`, {
+    const response = await fetch(`${API_ADDRESS}/posts/user-posts`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
@@ -170,7 +171,7 @@ function displayPosts(posts) {
 
 async function fetchAndDisplayComments(postId) {
   try {
-    const response = await fetch(`http://localhost:3000/comments?postId=${postId}`, {
+    const response = await fetch(`${API_ADDRESS}/comments?postId=${postId}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`,

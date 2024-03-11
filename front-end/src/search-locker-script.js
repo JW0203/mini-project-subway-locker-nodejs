@@ -1,3 +1,4 @@
+import API_ADDRESS from './config/config';
 document.getElementById('lockerForm').addEventListener('submit', function (e) {
   e.preventDefault();
   const page = document.getElementById('page').value;
@@ -7,7 +8,7 @@ document.getElementById('lockerForm').addEventListener('submit', function (e) {
 
 async function fetchLockers(page, limit) {
   try {
-    const response = await fetch(`http://localhost:3000/lockers?limit=${limit}&page=${page}`, {
+    const response = await fetch(`${API_ADDRESS}/lockers?limit=${limit}&page=${page}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
