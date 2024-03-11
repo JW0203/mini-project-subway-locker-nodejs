@@ -1,4 +1,3 @@
-import IP_ADDRESS from './config/config';
 let currentPage = 1;
 const limit = 5; // 페이지당 게시물 수
 
@@ -41,7 +40,7 @@ window.onclick = function (event) {
 document.getElementById('message-form').onsubmit = async function (event) {
   event.preventDefault(); // 실제 폼 제출 방지
   try {
-    const response = await fetch(`{IP_ADDRESS}/posts/`, {
+    const response = await fetch(`http://localhost:3000/posts/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,7 +70,7 @@ document.getElementById('message-form').onsubmit = async function (event) {
 };
 
 async function fetchPosts(page) {
-  const apiUrl = `${IP_ADDRESS}/posts/?limit=${limit}&page=${page}`;
+  const apiUrl = `http://localhost:3000/posts/?limit=${limit}&page=${page}`;
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
@@ -130,7 +129,7 @@ document.getElementById('search-btn').addEventListener('click', async () => {
     const postsContainer = document.getElementById('posts');
     postsContainer.innerHTML = '<p>검색 중...</p>';
     try {
-      const response = await fetch(`${IP_ADDRESS}/posts/user-email/${email}`);
+      const response = await fetch(`http://localhost:3000/posts/user-email/${email}`);
       const contentType = response.headers.get('Content-Type');
       if (!response.ok && contentType && contentType.includes('application/json')) {
         const errData = await response.json();

@@ -1,4 +1,3 @@
-import IP_ADDRESS from './config/config';
 document.getElementById('signInForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 
@@ -11,7 +10,7 @@ document.getElementById('signInForm').addEventListener('submit', async function 
 
   // Make a request to your backend to authenticate the user
   try {
-    const response = await fetch(`${IP_ADDRESS}/auth/sign-in/`, {
+    const response = await fetch(`http://localhost:3000/auth/sign-in/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
