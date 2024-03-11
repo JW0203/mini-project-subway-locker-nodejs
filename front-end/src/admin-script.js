@@ -1,10 +1,10 @@
 //------ Station
-import API_ADDRESS from './config/config';
+import IP_ADDRESS from './config/config';
 async function makeStations(stationsData) {
   try {
     const token = localStorage.getItem('accessToken'); // 인증 토큰 가져오기
 
-    const response = await fetch(`${API_ADDRESS}/stations`, {
+    const response = await fetch(`${IP_ADDRESS}/stations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ async function modifyStation(modifyData) {
     const token = localStorage.getItem('accessToken'); // 인증 토큰 가져오기
 
     const { id, data } = modifyData;
-    const response = await fetch(`${API_ADDRESS}/stations/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/stations/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -133,7 +133,7 @@ async function deleteStation(stationId) {
     if (confirm('이 정류장을 정말 삭제하시겠습니까?')) {
       const token = localStorage.getItem('accessToken');
 
-      const response = await fetch(`${API_ADDRESS}/stations/${stationId}`, {
+      const response = await fetch(`${IP_ADDRESS}/stations/${stationId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -190,7 +190,7 @@ document.getElementById('stationsDelete').addEventListener('submit', async funct
 async function restoreStation(stationId) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_ADDRESS}/stations/restore/${stationId}`, {
+    const response = await fetch(`${IP_ADDRESS}/stations/restore/${stationId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -227,7 +227,7 @@ async function makeLockers(lockersData) {
   try {
     const token = localStorage.getItem('accessToken');
     const authority = localStorage.getItem('authority');
-    const response = await fetch(`${API_ADDRESS}/lockers`, {
+    const response = await fetch(`${IP_ADDRESS}/lockers`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -271,7 +271,7 @@ document.getElementById('makeLockers').addEventListener('submit', async function
 async function modifyLocker(lockersData) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_ADDRESS}/lockers/management`, {
+    const response = await fetch(`${IP_ADDRESS}/lockers/management`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -312,7 +312,7 @@ document.getElementById('reviseLocker').addEventListener('submit', async functio
 async function deleteLocker(id) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_ADDRESS}/lockers/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/lockers/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -346,7 +346,7 @@ document.getElementById('deleteLocker').addEventListener('submit', async functio
 async function restoreLocker(id) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_ADDRESS}/lockers/restore/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/lockers/restore/${id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -392,7 +392,7 @@ document.getElementById('searchLockerId').addEventListener('submit', async funct
   const resultDisplay = document.getElementById('search-result');
   resultDisplay.innerHTML = '';
   try {
-    const response = await fetch(`${API_ADDRESS}/lockers/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/lockers/${id}`, {
       method: 'GET',
     }); // Use the appropriate URL for your API
     const contentType = response.headers.get('Content-Type');
@@ -438,7 +438,7 @@ document.getElementById('searchLockerId').addEventListener('submit', async funct
 async function deletePost(id) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_ADDRESS}/posts/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/posts/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -473,7 +473,7 @@ document.getElementById('deletePost').addEventListener('submit', async function 
 async function restorePost(id) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_ADDRESS}/posts/restore/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/posts/restore/${id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -509,7 +509,7 @@ document.getElementById('restorePost').addEventListener('submit', async function
 async function addComment(data) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_ADDRESS}/comments`, {
+    const response = await fetch(`${IP_ADDRESS}/comments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -550,7 +550,7 @@ document.getElementById('addComment').addEventListener('submit', async function 
 async function reviseComment(id, data) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_ADDRESS}/comments/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/comments/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -592,7 +592,7 @@ async function deleteComment(id) {
   try {
     const token = localStorage.getItem('accessToken');
     const authority = localStorage.getItem('authority');
-    const response = await fetch(`${API_ADDRESS}/comments/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/comments/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -628,7 +628,7 @@ async function restoreComment(id) {
   try {
     const token = localStorage.getItem('accessToken');
     const authority = localStorage.getItem('authority');
-    const response = await fetch(`${API_ADDRESS}/comments/restore/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/comments/restore/${id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -663,7 +663,7 @@ document.getElementById('restoreComment').addEventListener('submit', async funct
 //------ User
 async function deleteUser(id) {
   try {
-    const response = await fetch(`${API_ADDRESS}/users/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/users/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -698,7 +698,7 @@ document.getElementById('deleteUser').addEventListener('submit', async function 
 
 async function restoreUser(id) {
   try {
-    const response = await fetch(`${API_ADDRESS}/users/${id}`, {
+    const response = await fetch(`${IP_ADDRESS}/users/${id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

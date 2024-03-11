@@ -1,6 +1,6 @@
 async function signUp(email, password, role) {
   try {
-    const baseUrl = `${API_ADDRESS}/auth/`;
+    const baseUrl = `${IP_ADDRESS}/auth/`;
     const signUpUrl = role === 'admin' ? baseUrl + 'admin/sign-up/' : baseUrl + 'sign-up/';
 
     const response = await fetch(signUpUrl, {
