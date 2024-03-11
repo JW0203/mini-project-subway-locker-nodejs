@@ -5,7 +5,6 @@ const namespace = cls.createNamespace('jwt-encryption');
 Sequelize.useCLS(namespace);
 
 const sequelize = new Sequelize('ddota', process.env.DB_USER, process.env.DB_PASSWORD, {
-  //host: '127.0.0.1',
   host: process.env.DB_HOST,
   dialect: 'mysql',
   logQueryParameters: true,
