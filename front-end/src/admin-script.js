@@ -35,7 +35,8 @@ async function modifyStation(modifyData) {
     const token = localStorage.getItem('accessToken'); // 인증 토큰 가져오기
 
     const { id, data } = modifyData;
-    const response = await fetch(`http:/${IP_ADDRESS}:3000/stations/${id}`, {
+
+    const response = await fetch(`http://${IP_ADDRESS}:3000/stations/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
