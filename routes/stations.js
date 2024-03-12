@@ -406,7 +406,7 @@ router.post(
 
 /**
  * @swagger
- * /posts/{id}:
+ * /stations/{id}:
  *   patch:
  *     summary: 게시물 수정
  *     description: 관리자가 로그인 한 후, 게시물의 아이디를 받고 해당 게시물을 수정

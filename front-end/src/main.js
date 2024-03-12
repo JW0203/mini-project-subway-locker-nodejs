@@ -149,7 +149,7 @@ async function lockerClickHandler(id) {
     alert('이 기능을 사용하려면 로그인 해주세요.');
     const redirectUrl = `index.html`;
     const authority = 'user';
-    window.location.href = `../public/sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
+    window.location.href = `./public/sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
   }
 }
 
@@ -180,7 +180,7 @@ document.getElementById('logout').addEventListener('click', async () => {
       localStorage.removeItem('accessToken');
       alert('로그아웃 되었습니다.');
       // 로그아웃 후 홈페이지로 이동하거나 페이지 새로고침
-      window.location.href = '../index.html'; // 홈페이지 URL로 변경하세요
+      window.location.href = './index.html';
     } else {
       // 로그아웃 실패 처리
       alert('로그아웃에 실패했습니다.');
@@ -194,11 +194,11 @@ document.getElementById('logout').addEventListener('click', async () => {
 // Event listener for the "Return" button
 document.getElementById('myPage').addEventListener('click', () => {
   if (userIsLoggedIn()) {
-    window.location.href = '../public/my-page.html';
+    window.location.href = './public/my-page.html';
   } else {
     alert('사물함 대여 정보를 보려면 로그인 해주세요.');
     const redirectUrl = 'my-page.html';
-    window.location.href = `../public/sign-in.html?authority=user&redirect=${redirectUrl}`; // Update with the actual path to your sign-in page
+    window.location.href = `./public/sign-in.html?authority=user&redirect=${redirectUrl}`; // Update with the actual path to your sign-in page
   }
 });
 

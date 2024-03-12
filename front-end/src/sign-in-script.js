@@ -5,7 +5,6 @@ document.getElementById('signInForm').addEventListener('submit', async function 
   const urlParams = new URLSearchParams(window.location.search);
   const requiredAuthority = urlParams.get('authority');
   const redirectAddress = urlParams.get('redirect');
-  console.log(redirectAddress);
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
@@ -35,7 +34,7 @@ document.getElementById('signInForm').addEventListener('submit', async function 
     }
     // Check if authenticated user is admin
     if (data.authority === requiredAuthority && redirectAddress) {
-      window.location.href = `../public/${redirectAddress}`;
+      window.location.href = `${redirectAddress}`;
       localStorage.setItem('accessToken', data.accessToken);
     }
 
