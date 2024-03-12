@@ -1,13 +1,19 @@
 const goHome = document.getElementById('goHome');
 if (goHome) {
   goHome.addEventListener('click', function () {
-    window.location.href = './index.html';
+    console.log(window.location.href);
+    if (window.location.href.includes('public') === true) {
+      window.location.href = '../index.html';
+    } else {
+      window.location.href = './index.html';
+    }
+    //window.location = `http://${window.location.origin}/mini-project-subway-locker-nodejs/front-end/index.html`;
   });
 }
 const goSignIn = document.getElementById('goSignIn');
 if (goSignIn) {
   goSignIn.addEventListener('click', function () {
-    window.location.href = '../public/sign-in.html';
+    window.location.href = './public/sign-in.html';
   });
 }
 
