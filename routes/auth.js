@@ -52,7 +52,7 @@ router.post(
     if (!email || !password) {
       throw new HttpException(400, 'email 과 password 를 입력 해주세요.');
     }
-
+    console.log(typeof password);
     await sequelize.transaction(async () => {
       const isValidEmailPassword = await signUpEmailPasswordValidation(email, password);
       if (!isValidEmailPassword.validation) {
