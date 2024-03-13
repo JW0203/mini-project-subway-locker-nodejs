@@ -58,8 +58,8 @@ router.post(
       if (!isValidEmailPassword.validation) {
         throw new HttpException(isValidEmailPassword.statusCode, isValidEmailPassword.message);
       }
-
-      const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
+      const saltRounds = parseInt(process.env.SALT_ROUNDS);
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       await User.create({
         email,
