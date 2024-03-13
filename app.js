@@ -19,7 +19,8 @@ sequelize.sync({ alter: true });
 // sequelize.sync({ force: true });
 
 app.use(express.json());
-app.use(cors({ origin: [`http://${process.env.HOST_IP}:3000`, `${process.env.FRONTEND_ORIGIN}`] }));
+//app.use(cors({ origin: [`http://${process.env.HOST_IP}:3000`, `${process.env.FRONTEND_ORIGIN}`] }));
+app.use(cors());
 app.use(express.json());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/lockers', lockerRouter);
