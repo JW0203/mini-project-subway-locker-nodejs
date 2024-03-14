@@ -6,20 +6,15 @@ const swaggerSpec = require('./config/swaggerDef');
 
 const HttpException = require('./middleware/HttpException');
 const cors = require('cors');
-// if (typeof localStorage === 'undefined' || localStorage === null) {
-//   var LocalStorage = require('node-localstorage').LocalStorage;
-//   localStorage = new LocalStorage('./scratch');
-// }
 
 const app = express();
 const port = 3000;
 const { lockerRouter, authRouter, userRouter, postsRouter, commentsRouter, stationsRouter } = require('./routes');
 
-sequelize.sync({ alter: true });
+//sequelize.sync({ alter: true });
 // sequelize.sync({ force: true });
 
 app.use(express.json());
-//app.use(cors({ origin: [`http://${process.env.HOST_IP}:3000`, `${process.env.FRONTEND_ORIGIN}`] }));
 app.use(cors());
 app.use(express.json());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

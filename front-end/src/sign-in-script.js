@@ -37,14 +37,6 @@ document.getElementById('signInForm').addEventListener('submit', async function 
       window.location.href = `${redirectAddress}`;
       localStorage.setItem('accessToken', data.accessToken);
     }
-
-    // const redirectTo = localStorage.getItem('redirectTo');
-    // if (redirectTo) {
-    //   // Redirect the user back to the page they came from
-    //   window.location.href = redirectTo;
-    //   // Clear the redirect target to prevent unintended future redirects
-    //   localStorage.removeItem('redirectTo');
-    // }
   } catch (error) {
     console.error('로그인 중 에러가 발생했습니다.:', error);
     alert(error.message);
