@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { User, BlackList, Admin } = require('../models');
 const sequelize = require('../config/database');
 const express = require('express');

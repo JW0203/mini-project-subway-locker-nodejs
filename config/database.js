@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { Sequelize } = require('sequelize');
 const cls = require('cls-hooked');
 const namespace = cls.createNamespace('jwt-encryption');

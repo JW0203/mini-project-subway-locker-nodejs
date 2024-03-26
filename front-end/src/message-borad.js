@@ -1,4 +1,5 @@
 const IP_ADDRESS = 'localhost';
+
 let currentPage = 1;
 const limit = 5; // 페이지당 게시물 수
 

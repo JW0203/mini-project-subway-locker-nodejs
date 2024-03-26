@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { Station, Locker } = require('../models');
 const express = require('express');
 const router = express.Router();

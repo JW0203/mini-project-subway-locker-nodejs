@@ -1,5 +1,6 @@
 //------ Station
 const IP_ADDRESS = 'localhost';
+
 async function makeStations(stationsData) {
   try {
     const token = localStorage.getItem('accessToken'); // 인증 토큰 가져오기
