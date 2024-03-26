@@ -170,23 +170,31 @@ document.getElementById('logout').addEventListener('click', async () => {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        Authorization: `Bearer ${token}`,
       },
       // body: JSON.stringify({ email }),
     });
 
-    if (response.status === 204) {
+    if (response.ok === true) {
       // 로그아웃 성공
       localStorage.removeItem('accessToken');
       alert('로그아웃 되었습니다.');
       // 로그아웃 후 홈페이지로 이동하거나 페이지 새로고침
       window.location.href = './index.html';
-    } else {
-      // 로그아웃 실패 처리
-      alert('로그아웃에 실패했습니다.');
+    }
+
+    if (response.ok === false) {
+      const errDataJson = await response.json();
+      throw new Error({ message: errDataJson.message });
     }
   } catch (error) {
-    console.error('로그아웃 오류:', error);
+    console.log(error);
+    if (error.message.includes('토큰 기한이 만료되었습니다.')) {
+      localStorage.removeItem('accessToken');
+      alert('로그아웃 되었습니다.');
+      return;
+    }
+    console.error('로그아웃 오류:');
     alert('로그아웃 중 오류가 발생했습니다.');
   }
 });

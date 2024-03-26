@@ -17,7 +17,8 @@ btn.onclick = function () {
     // 로그인 페이지로 리다이렉트
     const redirectUrl = `message-board.html`;
     const authority = 'user';
-    window.location.href = `./public/sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
+    alert('이 기능을 사용하려면 로그인 해주세요.');
+    window.location.href = `./sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
   }
   if (localStorage.getItem('accessToken')) {
     // 사용자가 로그인한 경우, 메시지 모달 표시

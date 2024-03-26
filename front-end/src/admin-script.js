@@ -3,7 +3,6 @@ const IP_ADDRESS = 'localhost';
 async function makeStations(stationsData) {
   try {
     const token = localStorage.getItem('accessToken'); // 인증 토큰 가져오기
-
     const response = await fetch(`http://${IP_ADDRESS}:3000/stations`, {
       method: 'POST',
       headers: {
@@ -133,7 +132,6 @@ async function deleteStation(stationId) {
   try {
     if (confirm('이 정류장을 정말 삭제하시겠습니까?')) {
       const token = localStorage.getItem('accessToken');
-
       const response = await fetch(`http://${IP_ADDRESS}:3000/stations/${stationId}`, {
         method: 'DELETE',
         headers: {

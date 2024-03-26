@@ -1,4 +1,5 @@
 const IP_ADDRESS = 'localhost';
+
 document.getElementById('signInForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 

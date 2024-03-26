@@ -3,7 +3,6 @@ const express = require('express');
 const sequelize = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swaggerDef');
-
 const HttpException = require('./middleware/HttpException');
 const cors = require('cors');
 
