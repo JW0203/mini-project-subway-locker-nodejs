@@ -1,4 +1,8 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
+const env = process.argv[2] || 'local';
+dotenv.config({ path: `.env.${env}` });
+console.log(`Start ${process.env.APP_ENV} mode`);
+
 const express = require('express');
 const sequelize = require('./config/database');
 const swaggerUi = require('swagger-ui-express');
