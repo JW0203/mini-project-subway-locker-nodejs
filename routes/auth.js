@@ -58,8 +58,8 @@ router.post(
       if (!isValidEmailPassword.validation) {
         throw new HttpException(isValidEmailPassword.statusCode, isValidEmailPassword.message);
       }
-
-      const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
+      const saltRounds = parseInt(process.env.SALT_ROUNDS);
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       await User.create({
         email,
@@ -82,7 +82,7 @@ router.post(
  *   post:
  *     summary: 회원가입
  *     requestBody:
- *       description: .env에 저장된 이메일 비번을 먼저 확인하고, 전달 받은 이메일과 패스워드를 이용하여 유효성을 확인한 후 회원가입 실행
+ *       description: .env 에 저장된 이메일 비번을 먼저 확인하고, 전달 받은 이메일과 패스워드를 이용하여 유효성을 확인한 후 회원가입 실행
  *       required: true
  *       content:
  *         application/json:
@@ -133,7 +133,8 @@ router.post(
         throw new HttpException(isValidEmailPassword.statusCode, isValidEmailPassword.message);
       }
 
-      const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
+      const saltRounds = parseInt(process.env.SALT_ROUNDS);
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       await Admin.create({
         email,
@@ -171,7 +172,7 @@ router.post(
  *
  *     responses:
  *       201:
- *         description: 받은 이메일 주소와 비밀번호 일치, 로그인 성공, access token은 local storage 에 저장
+ *         description: 받은 이메일 주소와 비밀번호 일치, 로그인 성공, access token 은 local storage 에 저장
  *         content:
  *           application/json:
  *             schema:
@@ -199,9 +200,8 @@ router.post(
       });
 
       if (!user && !admin) {
-        throw new HttpException(401, '입력하신 email은 없습니다.');
+        throw new HttpException(401, '입력하신 email 은 없습니다.');
       }
-
       const signIn = user || admin;
 
       const passwordValidation = await bcrypt.compare(password, signIn.password);
@@ -217,7 +217,7 @@ router.post(
         },
         process.env.JWT_SECRET_KEY,
         {
-          expiresIn: '1d',
+          expiresIn: '4s',
         },
       );
 
@@ -251,20 +251,13 @@ router.post(
  *
  *     responses:
  *       204:
- *         description: 로그아웃 성공 - 받은 이메일 주소와 access token 일치, local storage에 있는 access token 삭제
+ *         description: 로그아웃 성공 - 받은 이메일 주소와 access token 일치, local storage 에 있는 access token 삭제
  */
 
 router.delete(
   '/sign-out',
   authenticateToken,
   asyncHandler(async (req, res) => {
-    const autherHeader = req.headers.authorization;
-    const accessToken = autherHeader && autherHeader.split(' ')[1];
-
-    if (!accessToken) {
-      throw new HttpException(401, '헤더에 토큰이 없습니다.');
-    }
-
     res.status(204).send();
   }),
 );

@@ -466,7 +466,6 @@ router.patch(
   authorityConfirmation([UserAuthority.ADMIN]),
   asyncHandler(async (req, res) => {
     const { lockerId, status } = req.body;
-    console.log(typeof lockerId);
     if (!lockerId || !status) {
       throw new HttpException(400, 'lockerId 와 status 값을 모두 입력해주세요.');
     }

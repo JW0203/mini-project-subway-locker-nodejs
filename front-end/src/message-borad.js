@@ -1,3 +1,5 @@
+const IP_ADDRESS = 'localhost';
+
 let currentPage = 1;
 const limit = 5; // 페이지당 게시물 수
 
@@ -16,7 +18,8 @@ btn.onclick = function () {
     // 로그인 페이지로 리다이렉트
     const redirectUrl = `message-board.html`;
     const authority = 'user';
-    window.location.href = `../public/sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
+    alert('이 기능을 사용하려면 로그인 해주세요.');
+    window.location.href = `./sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
   }
   if (localStorage.getItem('accessToken')) {
     // 사용자가 로그인한 경우, 메시지 모달 표시
@@ -40,7 +43,7 @@ window.onclick = function (event) {
 document.getElementById('message-form').onsubmit = async function (event) {
   event.preventDefault(); // 실제 폼 제출 방지
   try {
-    const response = await fetch('http://localhost:3000/posts/', {
+    const response = await fetch(`http://${IP_ADDRESS}:3000/posts/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -70,7 +73,7 @@ document.getElementById('message-form').onsubmit = async function (event) {
 };
 
 async function fetchPosts(page) {
-  const apiUrl = `http://localhost:3000/posts/?limit=${limit}&page=${page}`;
+  const apiUrl = `http://${IP_ADDRESS}:3000/posts/?limit=${limit}&page=${page}`;
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
@@ -129,7 +132,7 @@ document.getElementById('search-btn').addEventListener('click', async () => {
     const postsContainer = document.getElementById('posts');
     postsContainer.innerHTML = '<p>검색 중...</p>';
     try {
-      const response = await fetch(`http://localhost:3000/posts/user-email/${email}`);
+      const response = await fetch(`http://${IP_ADDRESS}:3000/posts/user-email/${email}`);
       const contentType = response.headers.get('Content-Type');
       if (!response.ok && contentType && contentType.includes('application/json')) {
         const errData = await response.json();

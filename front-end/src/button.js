@@ -1,13 +1,19 @@
 const goHome = document.getElementById('goHome');
 if (goHome) {
   goHome.addEventListener('click', function () {
-    window.location.href = '../public/index.html';
+    console.log(window.location.href);
+    if (window.location.href.includes('public') === true) {
+      window.location.href = '../index.html';
+    } else {
+      window.location.href = './index.html';
+    }
+    //window.location = `http://${window.location.origin}/mini-project-subway-locker-nodejs/front-end/index.html`;
   });
 }
 const goSignIn = document.getElementById('goSignIn');
 if (goSignIn) {
   goSignIn.addEventListener('click', function () {
-    window.location.href = '../public/sign-in.html';
+    window.location.href = './public/sign-in.html';
   });
 }
 
@@ -17,10 +23,10 @@ if (goAdmin) {
   const redirectUrl = 'admin.html';
   goAdmin.addEventListener('click', function () {
     if (userIsLoggedInUserAuthority(authority)) {
-      window.location.href = `../public/admin.html`;
+      window.location.href = `./public/admin.html`;
     }
     if (!userIsLoggedInUserAuthority(authority)) {
-      window.location.href = `../public/sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
+      window.location.href = `./public/sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
     }
   });
 }
@@ -28,7 +34,7 @@ if (goAdmin) {
 const goMessageBoard = document.getElementById('goMessageBoard');
 if (goMessageBoard) {
   goMessageBoard.addEventListener('click', function () {
-    window.location.href = `../public/message-board.html`;
+    window.location.href = `./public/message-board.html`;
   });
 }
 

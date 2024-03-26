@@ -1,10 +1,11 @@
+require('dotenv').config();
 const { Sequelize } = require('sequelize');
 const cls = require('cls-hooked');
 const namespace = cls.createNamespace('jwt-encryption');
 Sequelize.useCLS(namespace);
 
-const sequelize = new Sequelize('lockers_subway', 'root', '', {
-  host: '127.0.0.1',
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+  host: process.env.DB_HOST,
   dialect: 'mysql',
   logQueryParameters: true,
 });

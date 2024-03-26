@@ -1,5 +1,7 @@
+const IP_ADDRESS = 'localhost';
+
 var trainIcon = L.icon({
-  iconUrl: '../images/train.png',
+  iconUrl: './images/train.png',
   iconSize: [25, 25], // Adjust the size as needed
   iconAnchor: [19, 25], // Adjust the anchor point as needed
   popupAnchor: [0, -25],
@@ -18,7 +20,7 @@ L.svg().addTo(map);
 // Function to fetch and display stations
 async function fetchAndDisplayStations() {
   try {
-    const response = await fetch('http://localhost:3000/stations');
+    const response = await fetch(`http://${IP_ADDRESS}:3000/stations`);
     const contentType = response.headers.get('Content-Type');
     if (!response.ok && contentType && contentType.includes('application/json')) {
       const errData = await response.json();
@@ -44,7 +46,7 @@ async function fetchAndDisplayStations() {
 // Function to fetch station details
 async function fetchStationDetails(stationId) {
   try {
-    const response = await fetch(`http://localhost:3000/stations/${stationId}`);
+    const response = await fetch(`http://${IP_ADDRESS}:3000/stations/${stationId}`);
 
     const contentType = response.headers.get('Content-Type');
     if (!response.ok && contentType && contentType.includes('application/json')) {
@@ -110,7 +112,7 @@ function displayStationDetails(details) {
 async function rentLocker(id) {
   try {
     const token = localStorage.getItem('accessToken');
-    const response = await fetch(`http://localhost:3000/lockers/rental`, {
+    const response = await fetch(`http://${IP_ADDRESS}:3000/lockers/rental`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -147,7 +149,7 @@ async function lockerClickHandler(id) {
     alert('이 기능을 사용하려면 로그인 해주세요.');
     const redirectUrl = `index.html`;
     const authority = 'user';
-    window.location.href = `../public/sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
+    window.location.href = `./public/sign-in.html?authority=${authority}&redirect=${redirectUrl}`;
   }
 }
 
@@ -164,27 +166,35 @@ document.getElementById('logout').addEventListener('click', async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/auth/sign-out', {
+    const response = await fetch(`http://${IP_ADDRESS}:3000/auth/sign-out`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        Authorization: `Bearer ${token}`,
       },
       // body: JSON.stringify({ email }),
     });
 
-    if (response.status === 204) {
+    if (response.ok === true) {
       // 로그아웃 성공
       localStorage.removeItem('accessToken');
       alert('로그아웃 되었습니다.');
       // 로그아웃 후 홈페이지로 이동하거나 페이지 새로고침
-      window.location.href = '../public/index.html'; // 홈페이지 URL로 변경하세요
-    } else {
-      // 로그아웃 실패 처리
-      alert('로그아웃에 실패했습니다.');
+      window.location.href = './index.html';
+    }
+
+    if (response.ok === false) {
+      const errDataJson = await response.json();
+      throw new Error({ message: errDataJson.message });
     }
   } catch (error) {
-    console.error('로그아웃 오류:', error);
+    console.log(error);
+    if (error.message.includes('토큰 기한이 만료되었습니다.')) {
+      localStorage.removeItem('accessToken');
+      alert('로그아웃 되었습니다.');
+      return;
+    }
+    console.error('로그아웃 오류:');
     alert('로그아웃 중 오류가 발생했습니다.');
   }
 });
@@ -192,11 +202,11 @@ document.getElementById('logout').addEventListener('click', async () => {
 // Event listener for the "Return" button
 document.getElementById('myPage').addEventListener('click', () => {
   if (userIsLoggedIn()) {
-    window.location.href = '../public/my-page.html';
+    window.location.href = './public/my-page.html';
   } else {
     alert('사물함 대여 정보를 보려면 로그인 해주세요.');
     const redirectUrl = 'my-page.html';
-    window.location.href = `../public/sign-in.html?authority=user&redirect=${redirectUrl}`; // Update with the actual path to your sign-in page
+    window.location.href = `./public/sign-in.html?authority=user&redirect=${redirectUrl}`; // Update with the actual path to your sign-in page
   }
 });
 

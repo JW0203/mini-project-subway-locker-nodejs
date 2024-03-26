@@ -1,6 +1,7 @@
+const IP_ADDRESS = 'localhost';
 async function signUp(email, password, role) {
   try {
-    const baseUrl = 'http://localhost:3000/auth/';
+    const baseUrl = `http://${IP_ADDRESS}:3000/auth/`;
     const signUpUrl = role === 'admin' ? baseUrl + 'admin/sign-up/' : baseUrl + 'sign-up/';
 
     const response = await fetch(signUpUrl, {
