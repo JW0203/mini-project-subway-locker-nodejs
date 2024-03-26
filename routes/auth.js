@@ -217,7 +217,7 @@ router.post(
         },
         process.env.JWT_SECRET_KEY,
         {
-          expiresIn: '4s',
+          expiresIn: '1d',
         },
       );
 
