@@ -257,6 +257,7 @@ router.delete(
   '/sign-out',
   authenticateToken,
   asyncHandler(async (req, res) => {
+    // 로그아웃을 언제했는 지 저장하는 로직추가 필요
     res.status(204).send();
   }),
 );
