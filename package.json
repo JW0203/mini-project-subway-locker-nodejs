@@ -4,6 +4,8 @@
   "description": "## 참고한 자료 또타라커",
   "main": "app.js",
   "scripts": {
+    "start:local": "NODE_ENV=local node app.js",
+    "start:prod": "NODE_ENV=prod node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
