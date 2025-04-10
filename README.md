@@ -1,69 +1,92 @@
-
-[![Nodejs](https://img.shields.io/badge/Platform-Node.js-green)](https://nodejs.org/en)
+<!--
+[![Nodejs](https://img.shields.io/badge/Runtime-Node.js-green)](https://nodejs.org/en)
 [![express](https://img.shields.io/badge/Web_frame-express.js-white)](https://nodejs.org/en)
 [![Js](https://img.shields.io/badge/code-JavaScript-blue)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Sequelize](https://img.shields.io/badge/ORM-Sequelize-yellow)](https://sequelize.org/)
 [![mysql](https://img.shields.io/badge/DBMS-MySQL-orange)](https://www.mysql.com/)
+-->
+
+![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
+![Express](https://img.shields.io/badge/Express.js-000000?logo=express&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
+![Sequelize](https://img.shields.io/badge/Sequelize-52B0E7?logo=sequelize&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white)
+![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?logo=amazon-aws&logoColor=white)
+![HTML](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
+![Leaflet](https://img.shields.io/badge/Leaflet-199900?logo=leaflet&logoColor=white)
+![OpenWeather](https://img.shields.io/badge/OpenWeather_API-FF6B00?logo=OpenWeather&logoColor=white)
 
 
-# 미니 프로젝트 : 지하철 사물함 대여 서비스 구현
-
+# Mini Project : Subway Locker Rental Service
 
 ## Purpose of this project
-- 실제로 구현된 서비스 따라하기
-- ChatGPT 이용하여 Front-end 구현
-- Front-end 와 Back-end 간의 상호작용 이해
-- 공부한 back-end 개념 실전에 적용
-  - API 네이밍
-  - REST 설계규칙
-  - HTTP 상태코드
-  - 미들웨어
-  - 함수구현
+- Recreate a real-world service for practical experience
+- Lightweight implementation of the Front-end using JavaScript, HTML, and CSS 
+- Understand interaction between Front-end and Back-end
+- Applied back-end concepts in practice
+  - API naming conventions
+  - RESTful design principles
+  - HTTP status codes
+  - Middleware implementation
+  - Function-level logic
 
 
-## 구현된 기능들
+## Features Implemented
 
-### 1. 지도 기능
-- **지도 위 역 위치 표시**
-  - [Leaflet](https://leafletjs.com/)을 이용
+### 1. Station Map
+- **Display station locations on a map**
+  - Implemented using [Leaflet](https://leafletjs.com/)
 
-### 2. 역 상호작용
-- **역 클릭 시 현재 날씨 및 사물함 정보 표시**
-    - 역을 클릭하면 현재 날씨, 습도, 사물함 상태 정보가 표시
-    - 날씨 정보는 [OpenWeather API](https://openweathermap.org/api)를 이용
-    - 사물함 상태(대여 중, 대여 가능, 점검 중)는 다른 색으로 구분
+### 2. Station Interaction
+- **Click a station to view current weather and locker status**
+    - Weather data fetched from [OpenWeather API](https://openweathermap.org/api)
+    - Locker status shown with different colors:
+      - Available / In Use / Under Maintenance 
 
-### 3. 사용자 계정 관리
-- **회원가입 / 로그인 / 로그아웃**
-    - jwt 를 이용
+### 3. User Account Management
+- **Sign up / Log in / Log out**
+    - Implemented with JWT authentication
  
-### 4. 유저와 관리자 권한 구별
-- **미들웨어**를 이용한 구별
+### 4. Role-Based Access Control
+- Role verification using **custom middleware**
   - authorityConfirmation.js
 
-### 5. 메시지 보드 (Q&A)
-- **메시지 게시 / 게시물에 답글 달기**
-    - 사용자가 게시판에 메시지를 게시
-    - 관리자가 기존 메시지에 답글을 게시
+### 5. Message Board (Q&A)
+- Post messages and reply to messages
+    - Users can post messages
+    - Admins can reply to message
 
-### 6. 마이 페이지
-- **개인화된 사용자 대시보드**
-    - 대여한 사물함 반환
-    - 계정 삭제
-    - 작성한 메세지 및 댓글 확인
+### 6. My Page (User Dashboard)
+- **Personalized dashboard for users**
+    - Return rented lockers
+    - Delete account
+    - View own posts and comments
 
-### 7. 관리자 페이지
-- **콘텐츠 및 사용자 관리**
-    - 관리자가 게시물, 댓글, 역, 락커, 사용자 계정을 삭제, 복원, 편집할 수 있는 기능을 제공
+### 7. Admin Page
+- **Admin control panel**
+    - Manage stations, lockers, posts, comments, and user accounts
+    - Features: delete, restore, edit
 
-## 데이터베이스 ERD
+## Database ERD
 ![ERD 설명](ERD-2.png)
 
 ## Stack
+Back-end
 - Language: JavaScript
-- Library & Framework : Node.js
-- Database : MySQL
-- ORM : Sequelize
-- Deploy: AWS EC2
+- Runtime: Node.js
+- Framework: Express.js
+- DBMS: MySQL
+- ORM: Sequelize
+- Authentication: JWT
+- Deployment: AWS EC2
+
+Front-end
+- Language: JavaScript
+- Markup & Styling: HTML, CSS
+- Map Library: Leaflet (map)
+- API: OpenWeather API
 
 
 ## Project Structure
